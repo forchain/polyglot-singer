@@ -5,11 +5,8 @@
 	export let data: PageData;
 	
 	function handleGetStarted() {
-		if (data.user) {
-			goto('/analyze');
-		} else {
-			goto('/register');
-		}
+		// Always go to analyze page for immediate experience
+		goto('/analyze');
 	}
 </script>
 
@@ -35,7 +32,7 @@
 				on:click={handleGetStarted}
 				class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-lg"
 			>
-				{data.user ? 'Start Analyzing' : 'Get Started Free'}
+				Start Analyzing Now
 			</button>
 			
 			<a
@@ -161,7 +158,7 @@
 			on:click={handleGetStarted}
 			class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-lg"
 		>
-			{data.user ? 'Analyze Your First Song' : 'Start Learning for Free'}
+			Start Analyzing Now
 		</button>
 	</div>
 </section> 

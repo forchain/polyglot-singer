@@ -20,8 +20,35 @@ npm install
 Create a `.env` file in the root directory:
 
 ```bash
-# OpenAI API Configuration
+# AI Provider Configuration (Choose one)
+# Option 1: OpenAI
+AI_PROVIDER=openai
 OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL_DETECTION=gpt-4.1-nano
+
+# Option 2: Anthropic Claude
+# AI_PROVIDER=anthropic
+# ANTHROPIC_API_KEY=your_anthropic_api_key_here
+# ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+# ANTHROPIC_MODEL_DETECTION=claude-3-haiku-20240307
+
+# Option 3: Google Gemini
+# AI_PROVIDER=google
+# GOOGLE_API_KEY=your_google_api_key_here
+# GOOGLE_MODEL=gemini-1.5-pro
+# GOOGLE_MODEL_DETECTION=gemini-1.5-flash
+
+# Option 4: Local Model (Ollama)
+# AI_PROVIDER=local
+# LOCAL_BASE_URL=http://localhost:11434/v1
+# LOCAL_MODEL=llama3.2:3b
+
+# Option 5: Custom Provider
+# AI_PROVIDER=custom
+# CUSTOM_AI_BASE_URL=https://your-custom-api.com/v1
+# CUSTOM_AI_MODEL=your-model-name
+# CUSTOM_AI_API_KEY=your_api_key
 
 # Database Configuration
 DATABASE_URL=sqlite:dev.db

@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "test:integration": "playwright test",
-    "db:generate": "drizzle-kit generate:sqlite",
+    "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
   },
@@ -51,5 +51,8 @@
     "openai": "^4.52.1",
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "zod": "^3.23.8"
+  },
+  "volta": {
+    "node": "20.19.3"
   }
-} 
+}

@@ -3,6 +3,7 @@
 	import LyricInput from '$lib/components/LyricInput.svelte';
 	import LyricDisplay from '$lib/components/LyricDisplay.svelte';
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
+	import AIProviderSelector from '$lib/components/AIProviderSelector.svelte';
 	import type { LyricAnalysis } from '$lib/types/lyric.js';
 	import type { PageData } from './$types';
 	
@@ -13,6 +14,7 @@
 	let artist = '';
 	let sourceLanguage = 'en';
 	let targetLanguage = 'zh';
+	let selectedProvider = 'openai';
 	let analysis: LyricAnalysis | null = null;
 	let isAnalyzing = false;
 	let error: string | null = null;
@@ -36,6 +38,7 @@
 					lyrics: lyrics.trim(),
 					sourceLanguage,
 					targetLanguage,
+					provider: selectedProvider,
 					title: title.trim() || undefined,
 					artist: artist.trim() || undefined
 				})
@@ -114,29 +117,40 @@
 					</div>
 				</div>
 				
-				<!-- Language selection -->
+				<!-- AI Provider and Language Settings -->
 				<div class="space-y-4">
-					<h3 class="text-lg font-semibold text-gray-900">Language Settings</h3>
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+					<h3 class="text-lg font-semibold text-gray-900">Analysis Settings</h3>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						<!-- AI Provider Selection -->
 						<div>
-							<label class="form-label">From</label>
-							<LanguageSelector bind:value={sourceLanguage} />
+							<AIProviderSelector bind:selectedProvider />
 						</div>
-						<div class="flex justify-center">
-							<button
-								type="button"
-								on:click={handleLanguageSwap}
-								class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-								title="Swap languages"
-							>
-								<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-								</svg>
-							</button>
-						</div>
-						<div>
-							<label class="form-label">To</label>
-							<LanguageSelector bind:value={targetLanguage} />
+						
+						<!-- Language Settings -->
+						<div class="space-y-4">
+							<h4 class="text-md font-medium text-gray-900">Language Settings</h4>
+							<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+								<div>
+									<label class="form-label">From</label>
+									<LanguageSelector bind:value={sourceLanguage} />
+								</div>
+								<div class="flex justify-center">
+									<button
+										type="button"
+										on:click={handleLanguageSwap}
+										class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+										title="Swap languages"
+									>
+										<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+										</svg>
+									</button>
+								</div>
+								<div>
+									<label class="form-label">To</label>
+									<LanguageSelector bind:value={targetLanguage} />
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

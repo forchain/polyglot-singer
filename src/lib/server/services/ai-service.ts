@@ -1,10 +1,21 @@
 import OpenAI from 'openai';
 import { OPENAI_API_KEY } from '$env/static/private';
 import type { LyricAnalysis, WordAnalysis, LineAnalysis } from '$lib/types/lyric.js';
+import { getAIConfig, validateAIConfig, type AIConfig } from './ai-config.js';
 
-// Initialize OpenAI client
+// Get AI configuration
+const aiConfig = getAIConfig();
+
+// Validate configuration
+if (!validateAIConfig(aiConfig)) {
+	throw new Error('Invalid AI configuration. Please check your environment variables.');
+}
+
+// Initialize OpenAI-compatible client
 const openai = new OpenAI({
-	apiKey: OPENAI_API_KEY
+	apiKey: aiConfig.apiKey,
+	baseURL: aiConfig.baseURL,
+	timeout: aiConfig.timeout
 });
 
 /**
@@ -16,15 +27,26 @@ export async function analyzeToLyrics(
 	sourceLanguage: string = 'en',
 	targetLanguage: string = 'zh',
 	title?: string,
-	artist?: string
+	artist?: string,
+	provider?: string
 ): Promise<LyricAnalysis> {
 	const startTime = Date.now();
 
 	try {
+		// Get AI configuration for the specified provider
+		const aiConfig = getAIConfig(provider);
+		
+		// Reinitialize client with new config if provider changed
+		const client = new OpenAI({
+			apiKey: aiConfig.apiKey,
+			baseURL: aiConfig.baseURL,
+			timeout: aiConfig.timeout
+		});
+		
 		const prompt = createAnalysisPrompt(lyrics, sourceLanguage, targetLanguage);
 		
-		const completion = await openai.chat.completions.create({
-			model: 'gpt-4-turbo-preview',
+		const completion = await client.chat.completions.create({
+			model: aiConfig.model,
 			messages: [
 				{
 					role: 'system',
@@ -35,8 +57,8 @@ export async function analyzeToLyrics(
 					content: prompt
 				}
 			],
-			temperature: 0.3, // Lower temperature for more consistent results
-			max_tokens: 4000
+			temperature: aiConfig.temperature,
+			max_tokens: aiConfig.maxTokens
 		});
 
 		const response = completion.choices[0]?.message?.content;
@@ -52,7 +74,7 @@ export async function analyzeToLyrics(
 		analysis.artist = artist;
 		analysis.metadata = {
 			processingTime: Date.now() - startTime,
-			model: 'gpt-4-turbo-preview',
+			model: `${aiConfig.provider}:${aiConfig.model}`,
 			timestamp: new Date()
 		};
 
@@ -180,7 +202,7 @@ function parseAIResponse(
 export async function detectLanguage(text: string): Promise<string> {
 	try {
 		const completion = await openai.chat.completions.create({
-			model: 'gpt-3.5-turbo',
+			model: aiConfig.detectionModel || aiConfig.model,
 			messages: [
 				{
 					role: 'system',

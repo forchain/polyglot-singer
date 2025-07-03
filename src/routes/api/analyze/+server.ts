@@ -8,6 +8,7 @@ const analyzeRequestSchema = z.object({
 	lyrics: z.string().min(1, 'Lyrics are required').max(10000, 'Lyrics too long'),
 	sourceLanguage: z.string().optional().default('en'),
 	targetLanguage: z.string().optional().default('zh'),
+	provider: z.string().optional().default('openai'),
 	title: z.string().optional(),
 	artist: z.string().optional()
 });
@@ -29,7 +30,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			validatedData.sourceLanguage,
 			validatedData.targetLanguage,
 			validatedData.title,
-			validatedData.artist
+			validatedData.artist,
+			validatedData.provider
 		);
 		
 		// Return successful response
