@@ -1,0 +1,200 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom base styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    @apply antialiased text-gray-900;
+  }
+
+  /* Better focus styles */
+  *:focus {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  /* Lyric display grid - ensures perfect alignment */
+  .lyric-line {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .word-unit {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    min-width: fit-content;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .word-unit:hover {
+    @apply bg-gray-50;
+  }
+
+  .phonetic {
+    @apply text-sm text-primary-600 font-mono mb-1;
+    min-height: 1.25rem;
+  }
+
+  .original-word {
+    @apply text-lg font-medium text-gray-900 mb-1;
+    line-height: 1.2;
+  }
+
+  .translation {
+    @apply text-sm text-gray-600;
+    min-height: 1.25rem;
+    line-height: 1.3;
+  }
+
+  /* Loading animations */
+  .loading-pulse {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  .loading-spinner {
+    @apply inline-block animate-spin rounded-full border-4 border-solid border-current border-r-transparent;
+  }
+
+  /* Form styles */
+  .form-input {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+  }
+
+  .form-textarea {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 resize-none;
+  }
+
+  .form-select {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+  }
+
+  .form-error {
+    @apply text-red-600 text-sm mt-1;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+
+  .card-header {
+    @apply border-b border-gray-200 pb-4 mb-4;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  .card-description {
+    @apply text-sm text-gray-600 mt-1;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Text selection styles */
+  .select-none {
+    user-select: none;
+  }
+
+  .select-text {
+    user-select: text;
+  }
+
+  /* Custom grid for lyric alignment */
+  .lyric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.75rem;
+    align-items: start;
+  }
+
+  /* Responsive text sizes for lyrics */
+  .lyric-text-sm {
+    font-size: 0.875rem;
+  }
+
+  .lyric-text-base {
+    font-size: 1rem;
+  }
+
+  .lyric-text-lg {
+    font-size: 1.125rem;
+  }
+
+  /* Custom animation for word highlighting */
+  .word-highlight {
+    @apply bg-yellow-100 border-2 border-yellow-300;
+    animation: highlight-pulse 1s ease-in-out;
+  }
+
+  @keyframes highlight-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  /* Print styles for lyrics */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    .lyric-line {
+      break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
+    }
+  }
+} 
