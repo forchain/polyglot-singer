@@ -15,6 +15,7 @@ export interface LineAnalysis {
 	originalLine: string;
 	words: WordAnalysis[];
 	lineNumber: number;
+	lineTranslation?: string; // 整句翻译
 }
 
 export interface LyricAnalysis {
@@ -22,6 +23,8 @@ export interface LyricAnalysis {
 	artist?: string;
 	sourceLanguage: string;
 	targetLanguage: string;
+	summary?: string; // 整体总结
+	overallTranslation?: string; // 整体翻译
 	lines: LineAnalysis[];
 	metadata?: {
 		processingTime: number;

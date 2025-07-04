@@ -4,14 +4,7 @@ import type { AIProvider } from '$lib/types/ai-providers.js';
 import {
 	DEEPSEEK_API_KEY,
 	DEEPSEEK_MODEL,
-	DEEPSEEK_MODEL_DETECTION,
-	OPENAI_API_KEY,
-	OPENAI_MODEL,
-	OPENAI_MODEL_DETECTION,
-	CUSTOM_AI_BASE_URL,
-	CUSTOM_AI_MODEL,
-	CUSTOM_AI_API_KEY,
-	CUSTOM_MODEL_DETECTION
+	DEEPSEEK_MODEL_DETECTION
 } from '$env/static/private';
 
 export interface AIConfig {
@@ -90,26 +83,33 @@ export function getAIConfig(provider?: string): AIConfig {
 			detectionModel: DEEPSEEK_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
 		};
 	} else if (providerName === 'openai') {
+		// For OpenAI, we'll use environment variables if available, otherwise use defaults
+		const openaiApiKey = process.env.OPENAI_API_KEY || '';
+		const openaiModel = process.env.OPENAI_MODEL || baseConfig.model || defaultConfig.model;
+		const openaiDetectionModel = process.env.OPENAI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel;
+		
 		return {
 			...defaultConfig,
 			...baseConfig,
-			apiKey: OPENAI_API_KEY || '',
+			apiKey: openaiApiKey,
 			baseURL: 'https://api.openai.com/v1',
-			model: OPENAI_MODEL || baseConfig.model || defaultConfig.model,
-			detectionModel: OPENAI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+			model: openaiModel,
+			detectionModel: openaiDetectionModel
 		};
 	} else if (providerName === 'custom') {
+		// For custom providers, we'll use environment variables if available, otherwise use defaults
+		const customApiKey = process.env.CUSTOM_AI_API_KEY || '';
+		const customBaseUrl = process.env.CUSTOM_AI_BASE_URL || baseConfig.baseURL || defaultConfig.baseURL;
+		const customModel = process.env.CUSTOM_AI_MODEL || baseConfig.model || defaultConfig.model;
+		const customDetectionModel = process.env.CUSTOM_MODEL_DETECTION || customModel || baseConfig.detectionModel || defaultConfig.detectionModel;
+		
 		return {
 			...defaultConfig,
 			...baseConfig,
-			apiKey: CUSTOM_AI_API_KEY || '',
-			baseURL: CUSTOM_AI_BASE_URL || baseConfig.baseURL || defaultConfig.baseURL,
-			model: CUSTOM_AI_MODEL || baseConfig.model || defaultConfig.model,
-			detectionModel:
-				CUSTOM_MODEL_DETECTION ||
-				CUSTOM_AI_MODEL ||
-				baseConfig.detectionModel ||
-				defaultConfig.detectionModel
+			apiKey: customApiKey,
+			baseURL: customBaseUrl,
+			model: customModel,
+			detectionModel: customDetectionModel
 		};
 	} else {
 		return {

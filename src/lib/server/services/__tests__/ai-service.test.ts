@@ -7,25 +7,50 @@ vi.mock('openai', () => ({
 	default: vi.fn().mockImplementation(() => ({
 		chat: {
 			completions: {
-				create: vi.fn().mockResolvedValue({
-					choices: [{
-						message: {
-							content: JSON.stringify({
-								lines: [{
-									originalLine: "Hello world",
-									lineNumber: 1,
-									words: [{
-										word: "Hello",
-										phonetic: "/həˈloʊ/",
-										translation: "你好",
-										context: "greeting",
-										position: { line: 1, index: 0 }
+				create: vi.fn()
+					.mockResolvedValueOnce({
+						choices: [{
+							message: {
+								content: JSON.stringify({
+									overallTranslation: "你好世界",
+									summary: "这是一首关于问候的歌曲"
+								})
+							}
+						}]
+					})
+					.mockResolvedValueOnce({
+						choices: [{
+							message: {
+								content: JSON.stringify({
+									lines: [{
+										originalLine: "Hello world",
+										lineNumber: 1,
+										lineTranslation: "你好世界",
+										words: [{
+											word: "Hello",
+											phonetic: "/həˈloʊ/",
+											translation: "你好",
+											context: "greeting",
+											position: { line: 1, index: 0 }
+										}, {
+											word: "world",
+											phonetic: "/wɜːrld/",
+											translation: "世界",
+											context: "noun",
+											position: { line: 1, index: 1 }
+										}]
 									}]
-								}]
-							})
-						}
-					}]
-				})
+								})
+							}
+						}]
+					})
+					.mockResolvedValueOnce({
+						choices: [{
+							message: {
+								content: "en"
+							}
+						}]
+					})
 			}
 		}
 	}))
@@ -37,7 +62,7 @@ describe('AI Service', () => {
 	});
 
 	describe('analyzeToLyrics', () => {
-		it('should analyze lyrics with DeepSeek provider', async () => {
+		it('should analyze lyrics with DeepSeek provider including summary and translation', async () => {
 			const result = await analyzeToLyrics(
 				'Hello world',
 				'en',
@@ -50,7 +75,11 @@ describe('AI Service', () => {
 			expect(result).toBeDefined();
 			expect(result.sourceLanguage).toBe('en');
 			expect(result.targetLanguage).toBe('zh');
+			expect(result.summary).toBe('这是一首关于问候的歌曲');
+			expect(result.overallTranslation).toBe('你好世界');
 			expect(result.lines).toHaveLength(1);
+			expect(result.lines[0].lineTranslation).toBe('你好世界');
+			expect(result.lines[0].words).toHaveLength(2);
 		});
 
 		it('should analyze lyrics with OpenAI provider', async () => {
@@ -66,6 +95,8 @@ describe('AI Service', () => {
 			expect(result).toBeDefined();
 			expect(result.sourceLanguage).toBe('en');
 			expect(result.targetLanguage).toBe('zh');
+			expect(result.summary).toBeDefined();
+			expect(result.overallTranslation).toBeDefined();
 			expect(result.lines).toHaveLength(1);
 		});
 
@@ -81,6 +112,8 @@ describe('AI Service', () => {
 
 			expect(result).toBeDefined();
 			expect(result.metadata?.model).toContain('anthropic');
+			expect(result.summary).toBeDefined();
+			expect(result.overallTranslation).toBeDefined();
 		});
 
 		it('should analyze lyrics with local provider', async () => {
@@ -95,6 +128,22 @@ describe('AI Service', () => {
 
 			expect(result).toBeDefined();
 			expect(result.metadata?.model).toContain('local');
+			expect(result.summary).toBeDefined();
+			expect(result.overallTranslation).toBeDefined();
+		});
+
+		it('should include title and artist in result', async () => {
+			const result = await analyzeToLyrics(
+				'Hello world',
+				'en',
+				'zh',
+				'Test Song',
+				'Test Artist',
+				'deepseek'
+			);
+
+			expect(result.title).toBe('Test Song');
+			expect(result.artist).toBe('Test Artist');
 		});
 	});
 
