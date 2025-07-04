@@ -3,14 +3,16 @@
 
 	export let word: WordAnalysis;
 	export let sourceLanguage: string;
+	export let selectedVoice: string = '';
 
 	function speakWord() {
 		if (!window.speechSynthesis) return;
 		const utter = new window.SpeechSynthesisUtterance(word.word);
 		utter.lang = mapLang(sourceLanguage);
-		// 优先选用合适voice
 		const voices = window.speechSynthesis.getVoices();
-		const match = voices.find(v => v.lang.startsWith(utter.lang));
+		const match = selectedVoice
+			? voices.find(v => v.voiceURI === selectedVoice)
+			: voices.find(v => v.lang.startsWith(utter.lang));
 		if (match) utter.voice = match;
 		window.speechSynthesis.speak(utter);
 	}
