@@ -31,20 +31,27 @@ export async function analyzeToLyrics(
 	provider?: string
 ): Promise<LyricAnalysis> {
 	const startTime = Date.now();
+	let lastTime = startTime;
+	console.log('[AI] analyzeToLyrics: start', { lyricsLength: lyrics.length, sourceLanguage, targetLanguage, title, artist, provider });
 
 	try {
-		// Get AI configuration for the specified provider
+		console.log(`[AI] [${Date.now() - startTime}ms] Getting AI config...`);
 		const aiConfig = getAIConfig(provider);
-		
-		// Reinitialize client with new config if provider changed
+		console.log(`[AI] [${Date.now() - startTime}ms] Got AI config:`, aiConfig);
+
+		console.log(`[AI] [${Date.now() - startTime}ms] Initializing OpenAI client...`);
 		const client = new OpenAI({
 			apiKey: aiConfig.apiKey,
 			baseURL: aiConfig.baseURL,
 			timeout: aiConfig.timeout
 		});
-		
+		console.log(`[AI] [${Date.now() - startTime}ms] OpenAI client initialized.`);
+
+		console.log(`[AI] [${Date.now() - startTime}ms] Creating prompt...`);
 		const prompt = createAnalysisPrompt(lyrics, sourceLanguage, targetLanguage);
-		
+		console.log(`[AI] [${Date.now() - startTime}ms] Prompt created. Length: ${prompt.length}`);
+
+		console.log(`[AI] [${Date.now() - startTime}ms] Sending request to OpenAI API...`);
 		const completion = await client.chat.completions.create({
 			model: aiConfig.model,
 			messages: [
@@ -60,15 +67,18 @@ export async function analyzeToLyrics(
 			temperature: aiConfig.temperature,
 			max_tokens: aiConfig.maxTokens
 		});
+		console.log(`[AI] [${Date.now() - startTime}ms] OpenAI API responded.`);
 
 		const response = completion.choices[0]?.message?.content;
 		if (!response) {
+			console.error(`[AI] [${Date.now() - startTime}ms] No response from OpenAI API`);
 			throw new Error('No response from OpenAI API');
 		}
 
-		// Parse the structured response
+		console.log(`[AI] [${Date.now() - startTime}ms] Parsing AI response...`);
 		const analysis = parseAIResponse(response, sourceLanguage, targetLanguage);
-		
+		console.log(`[AI] [${Date.now() - startTime}ms] AI response parsed.`);
+
 		// Add metadata
 		analysis.title = title;
 		analysis.artist = artist;
@@ -78,10 +88,11 @@ export async function analyzeToLyrics(
 			timestamp: new Date()
 		};
 
+		console.log(`[AI] [${Date.now() - startTime}ms] Returning analysis result.`);
 		return analysis;
 
 	} catch (error) {
-		console.error('AI service error:', error);
+		console.error(`[AI] [${Date.now() - startTime}ms] AI service error:`, error);
 		throw new Error('Failed to analyze lyrics: ' + (error as Error).message);
 	}
 }

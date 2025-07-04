@@ -2,7 +2,7 @@
 export type AIProvider = 'openai' | 'anthropic' | 'google' | 'local' | 'custom';
 
 export const providerDisplayNames: Record<AIProvider, string> = {
-	openai: 'OpenAI (GPT-4, GPT-3.5)',
+	openai: 'OpenAI (GPT-4o-mini, GPT-4.1-nano)',
 	anthropic: 'Anthropic (Claude)',
 	google: 'Google (Gemini)',
 	local: 'Local (Ollama)',
@@ -21,7 +21,7 @@ export interface ProviderInfo {
 export const providerInfo: Record<AIProvider, ProviderInfo> = {
 	openai: {
 		name: 'OpenAI',
-		description: 'GPT-4 and GPT-3.5 models from OpenAI',
+		description: 'GPT-4o-mini and GPT-4.1-nano models from OpenAI',
 		requiresApiKey: true,
 		configUrl: 'https://platform.openai.com/api-keys'
 	},

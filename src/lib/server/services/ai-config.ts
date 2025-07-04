@@ -1,6 +1,15 @@
 // AI Service Configuration
 // Supports multiple OpenAI-compatible providers
 import type { AIProvider } from '$lib/types/ai-providers.js';
+import {
+	OPENAI_API_KEY,
+	OPENAI_MODEL,
+	OPENAI_MODEL_DETECTION,
+	CUSTOM_AI_BASE_URL,
+	CUSTOM_AI_MODEL,
+	CUSTOM_AI_API_KEY,
+	CUSTOM_MODEL_DETECTION
+} from '$env/static/private';
 
 export interface AIConfig {
 	provider: AIProvider;
@@ -16,10 +25,10 @@ export interface AIConfig {
 // Default configuration
 export const defaultConfig: AIConfig = {
 	provider: 'openai',
-	apiKey: process.env.OPENAI_API_KEY || '',
-	baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-	model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-	detectionModel: process.env.OPENAI_MODEL_DETECTION || 'gpt-4.1-nano',
+	apiKey: OPENAI_API_KEY || '',
+	baseURL: 'https://api.openai.com/v1',
+	model: OPENAI_MODEL || 'gpt-4o-mini',
+	detectionModel: OPENAI_MODEL_DETECTION || 'gpt-4.1-nano',
 	timeout: 30000,
 	maxTokens: 4000,
 	temperature: 0.3
@@ -53,25 +62,43 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 	},
 	// Custom providers can be added here
 	custom: {
-		provider: 'custom',
-		baseURL: process.env.CUSTOM_AI_BASE_URL,
-		model: process.env.CUSTOM_AI_MODEL || 'default-model'
+		provider: 'custom'
 	}
 };
 
 // Get configuration for a specific provider
 export function getAIConfig(provider?: string): AIConfig {
-	const providerName = provider || process.env.AI_PROVIDER || 'openai';
+	const providerName = provider || 'openai';
 	const baseConfig = providerConfigs[providerName] || providerConfigs.openai;
-	
-	return {
-		...defaultConfig,
-		...baseConfig,
-		apiKey: process.env[`${providerName.toUpperCase()}_API_KEY`] || process.env.OPENAI_API_KEY || '',
-		baseURL: process.env[`${providerName.toUpperCase()}_BASE_URL`] || baseConfig.baseURL || defaultConfig.baseURL,
-		model: process.env[`${providerName.toUpperCase()}_MODEL`] || baseConfig.model || defaultConfig.model,
-		detectionModel: process.env[`${providerName.toUpperCase()}_DETECTION_MODEL`] || baseConfig.detectionModel || defaultConfig.detectionModel
-	};
+
+	if (providerName === 'openai') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			apiKey: OPENAI_API_KEY || '',
+			baseURL: 'https://api.openai.com/v1',
+			model: OPENAI_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: OPENAI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+		};
+	} else if (providerName === 'custom') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			apiKey: CUSTOM_AI_API_KEY || '',
+			baseURL: CUSTOM_AI_BASE_URL || baseConfig.baseURL || defaultConfig.baseURL,
+			model: CUSTOM_AI_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel:
+				CUSTOM_MODEL_DETECTION ||
+				CUSTOM_AI_MODEL ||
+				baseConfig.detectionModel ||
+				defaultConfig.detectionModel
+		};
+	} else {
+		return {
+			...defaultConfig,
+			...baseConfig
+		};
+	}
 }
 
 // Validate configuration
@@ -80,17 +107,14 @@ export function validateAIConfig(config: AIConfig): boolean {
 		console.error('AI API key is required');
 		return false;
 	}
-	
 	if (!config.baseURL) {
 		console.error('AI base URL is required');
 		return false;
 	}
-	
 	if (!config.model) {
 		console.error('AI model is required');
 		return false;
 	}
-	
 	return true;
 }
 

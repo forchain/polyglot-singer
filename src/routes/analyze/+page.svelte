@@ -5,16 +5,21 @@
 	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
 	import AIProviderSelector from '$lib/components/AIProviderSelector.svelte';
 	import type { LyricAnalysis } from '$lib/types/lyric.js';
+	import type { AIProvider } from '$lib/types/ai-providers.js';
 	import type { PageData } from './$types';
 	
 	export let data: PageData;
 	
-	let lyrics = '';
-	let title = '';
-	let artist = '';
-	let sourceLanguage = 'en';
+	// Default values for testing
+	let lyrics = `君はどこにいるの
+君はどこへ行ったのか
+远い旅にでも出たんだね
+一番大切な人と`;
+	let title = 'End Roll';
+	let artist = '滨崎步';
+	let sourceLanguage = 'ja';
 	let targetLanguage = 'zh';
-	let selectedProvider = 'openai';
+	let selectedProvider: AIProvider = 'openai';
 	let analysis: LyricAnalysis | null = null;
 	let isAnalyzing = false;
 	let error: string | null = null;
@@ -59,12 +64,34 @@
 		}
 	}
 	
+	// Default demo values
+	const demoValues = {
+		lyrics: `君はどこにいるの
+君はどこへ行ったのか
+远い旅にでも出たんだね
+一番大切な人と`,
+		title: 'End Roll',
+		artist: '滨崎步',
+		sourceLanguage: 'ja',
+		targetLanguage: 'zh'
+	};
+
 	function handleReset() {
 		analysis = null;
 		error = null;
 		lyrics = '';
 		title = '';
 		artist = '';
+	}
+
+	function loadDemo() {
+		lyrics = demoValues.lyrics;
+		title = demoValues.title;
+		artist = demoValues.artist;
+		sourceLanguage = demoValues.sourceLanguage;
+		targetLanguage = demoValues.targetLanguage;
+		analysis = null;
+		error = null;
 	}
 	
 	function handleLanguageSwap() {
@@ -159,6 +186,11 @@
 				<div>
 					<label for="lyrics" class="form-label">Song Lyrics</label>
 					<LyricInput bind:value={lyrics} placeholder="Paste your song lyrics here..." />
+					{#if lyrics === demoValues.lyrics}
+						<p class="text-sm text-blue-600 mt-2">
+							💡 Demo loaded: "End Roll" by 滨崎步 (Japanese → Chinese)
+						</p>
+					{/if}
 				</div>
 				
 				<!-- Error display -->
@@ -175,8 +207,15 @@
 					</div>
 				{/if}
 				
-				<!-- Submit button -->
-				<div class="flex justify-center">
+				<!-- Action buttons -->
+				<div class="flex justify-center space-x-4">
+					<button
+						type="button"
+						on:click={loadDemo}
+						class="btn-secondary px-6 py-3 text-lg"
+					>
+						🎵 Load Demo
+					</button>
 					<button
 						type="submit"
 						disabled={isAnalyzing || !lyrics.trim()}
