@@ -79,15 +79,20 @@
 		<h3 class="text-lg font-semibold text-gray-800 mb-4">🔍 逐字分析</h3>
 		{#each analysis.lines as line}
 			<div class="lyric-line-box mb-6 p-4 border border-gray-200 rounded-lg bg-white">
-				<div class="flex justify-between items-start mb-2">
-					<span class="text-xs text-gray-500 font-mono">第 {line.lineNumber} 行</span>
+				<div class="flex justify-between items-center mb-2">
+					<div class="flex items-center gap-4 w-full">
+						<span class="text-xs text-gray-500 font-mono whitespace-nowrap">第 {line.lineNumber} 行</span>
+						{#if line.lineTranslation}
+							<span class="line-translation-inhead text-base text-gray-900 font-semibold truncate" style="max-width: 70vw;">{line.lineTranslation}</span>
+						{/if}
+					</div>
 					<button
 						type="button"
-						class="text-gray-400 hover:text-primary-600 text-sm px-2 py-1 rounded focus:outline-none"
+						class="text-gray-400 hover:text-primary-600 text-sm px-2 py-1 rounded focus:outline-none ml-2"
 						on:click={() => speakLine(line.words.map(w => w.word).join(' '), analysis.sourceLanguage)}
 						title="朗读整句"
 					>
-						🔊 朗读整句
+						🔊 
 					</button>
 				</div>
 				<!-- 逐字分析 -->
@@ -96,12 +101,6 @@
 						<WordUnit {word} sourceLanguage={analysis.sourceLanguage} selectedVoice={selectedVoice} />
 					{/each}
 				</div>
-				<!-- 整句翻译，始终在下方 -->
-				{#if line.lineTranslation}
-					<div class="line-translation mt-3 text-base text-gray-800 font-medium px-2">
-						{line.lineTranslation}
-					</div>
-				{/if}
 			</div>
 		{/each}
 	</div>
@@ -122,10 +121,11 @@
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
 	}
 
-	.line-translation {
-		box-shadow: none;
-		background: none;
-		border: none;
-		word-break: break-all;
+	.line-translation-inhead {
+		margin-left: 1.5rem;
+		font-size: 1.08em;
+		font-weight: 600;
+		color: #222;
+		white-space: pre-line;
 	}
 </style> 
