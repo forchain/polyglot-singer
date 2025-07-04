@@ -282,6 +282,7 @@ function createOverallAnalysisPrompt(
 	const languageNames = {
 		en: 'English',
 		zh: 'Chinese (Mandarin)',
+		yue: 'Cantonese (Yue Chinese)',
 		es: 'Spanish',
 		fr: 'French',
 		de: 'German',
@@ -304,20 +305,20 @@ ${songInfo}
 Song lyrics:
 ${lyrics}
 
-Please provide:
-1. A complete translation of the entire lyrics to ${targetLang}
-2. A comprehensive summary explaining the overall meaning, theme, and emotional context of the song
+Instructions:
+1. Output the complete translation of the entire lyrics in ${targetLang}.
+2. Output a comprehensive summary in ${targetLang}, explaining the overall meaning, theme, and emotional context of the song.
 
 Format your response as JSON with this exact structure:
 {
-  "overallTranslation": "complete translation of the entire lyrics",
-  "summary": "comprehensive summary explaining the meaning, theme, and emotional context"
+  "overallTranslation": "complete translation of the entire lyrics in ${targetLang}",
+  "summary": "comprehensive summary in ${targetLang} explaining the meaning, theme, and emotional context"
 }
 
 Important notes:
-- The overall translation should maintain the poetic and emotional quality of the original
-- The summary should explain the song's meaning, themes, emotions, and cultural context
-- Focus on the overall message and feeling of the song, not individual words`;
+- The overall translation should maintain the poetic and emotional quality of the original, and must be in ${targetLang}.
+- The summary must be written in ${targetLang}.
+- Focus on the overall message and feeling of the song, not individual words.`;
 }
 
 /**
@@ -356,6 +357,7 @@ function createDetailedAnalysisPrompt(
 	const languageNames = {
 		en: 'English',
 		zh: 'Chinese (Mandarin)',
+		yue: 'Cantonese (Yue Chinese)',
 		es: 'Spanish',
 		fr: 'French',
 		de: 'German',
@@ -369,20 +371,20 @@ function createDetailedAnalysisPrompt(
 	const sourceLang = languageNames[sourceLanguage as keyof typeof languageNames] || sourceLanguage;
 	const targetLang = languageNames[targetLanguage as keyof typeof languageNames] || targetLanguage;
 
-	return `Now analyze the following ${sourceLang} song lyrics word by word. 
+	return `Now analyze the following ${sourceLang} song lyrics word by word.
 
 Context from overall analysis:
 - Overall meaning: ${overallAnalysis.summary}
 - Overall translation: ${overallAnalysis.overallTranslation}
 
-For each word, provide:
-1. The original word
-2. Phonetic transcription (IPA format when possible)
-3. Translation to ${targetLang} (contextual meaning in the song, not dictionary definition)
-4. Brief context explanation if needed
-
-For each line, also provide:
-5. A complete translation of the entire line
+Instructions:
+- For each word, provide:
+  1. The original word
+  2. Phonetic transcription (IPA format when possible)
+  3. Translation to ${targetLang} (contextual meaning in the song, not dictionary definition)
+  4. Brief context explanation if needed
+- For each line, also provide:
+  5. A complete translation of the entire line in ${targetLang}
 
 Format your response as JSON with this exact structure:
 {
@@ -390,13 +392,13 @@ Format your response as JSON with this exact structure:
     {
       "originalLine": "exact line text",
       "lineNumber": 1,
-      "lineTranslation": "complete translation of this line",
+      "lineTranslation": "complete translation of this line in ${targetLang}",
       "words": [
         {
           "word": "original_word",
           "phonetic": "/phonetic_transcription/",
-          "translation": "contextual_translation",
-          "context": "brief_explanation_if_needed",
+          "translation": "contextual_translation in ${targetLang}",
+          "context": "brief_explanation_if_needed in ${targetLang}",
           "position": {"line": 1, "index": 0}
         }
       ]
@@ -408,13 +410,14 @@ Song lyrics to analyze:
 ${lyrics}
 
 Important notes:
-- Use the overall context to ensure accurate word translations
-- Maintain exact spacing and punctuation
-- For ${targetLang === 'Chinese (Mandarin)' ? 'Chinese, include pinyin in phonetic field' : 'phonetic transcriptions, use IPA when possible'}
-- Focus on how words are used in this song context
-- If a word has multiple meanings, choose the one that fits the song
-- Handle contractions as separate words (e.g., "don't" = "do" + "not")
-- Each lineTranslation should be a natural, fluent translation of the entire line`;
+- All translations and explanations must be in ${targetLang}.
+- Use the overall context to ensure accurate word translations.
+- Maintain exact spacing and punctuation.
+- For ${targetLang === 'Chinese (Mandarin)' ? 'Chinese, include pinyin in phonetic field' : targetLang === 'Cantonese (Yue Chinese)' ? 'Cantonese, include jyutping in phonetic field' : 'phonetic transcriptions, use IPA when possible'}.
+- Focus on how words are used in this song context.
+- If a word has multiple meanings, choose the one that fits the song.
+- Handle contractions as separate words (e.g., "don't" = "do" + "not").
+- Each lineTranslation should be a natural, fluent translation of the entire line in ${targetLang}.`;
 }
 
 /**
@@ -466,4 +469,19 @@ function parseDetailedAnalysis(
 		console.error('Failed to parse detailed analysis response:', error);
 		throw new Error('Failed to parse detailed analysis response');
 	}
+}
+
+function mapLang(code: string): string {
+	if (code === 'zh') return 'zh-CN';
+	if (code === 'yue') return 'zh-HK'; // 粤语
+	if (code === 'en') return 'en-US';
+	if (code === 'fr') return 'fr-FR';
+	if (code === 'es') return 'es-ES';
+	if (code === 'de') return 'de-DE';
+	if (code === 'ja') return 'ja-JP';
+	if (code === 'ko') return 'ko-KR';
+	if (code === 'it') return 'it-IT';
+	if (code === 'pt') return 'pt-PT';
+	if (code === 'ru') return 'ru-RU';
+	return code;
 } 

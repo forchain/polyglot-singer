@@ -89,6 +89,6 @@ export type Session = typeof sessions.$inferSelect;
 export type Lyric = typeof lyrics.$inferSelect;
 export type NewLyric = typeof lyrics.$inferInsert;
 export type LearningProgress = typeof learningProgress.$inferSelect;
-export type UserPreferences = typeof userPreferences.$inferSelect;
+export type UserPreferences = typeof userPreferences.$inferSelect; 
 export type AnalyzedLyric = typeof analyzedLyrics.$inferSelect;
 export type NewAnalyzedLyric = typeof analyzedLyrics.$inferInsert; 

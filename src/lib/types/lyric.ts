@@ -61,6 +61,7 @@ export interface LanguageConfig {
 export const SUPPORTED_LANGUAGES: LanguageConfig[] = [
 	{ code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸', supported: true },
 	{ code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳', supported: true },
+	{ code: 'yue', name: 'Cantonese', nativeName: '粵語/广东话', flag: '🇭🇰', supported: true },
 	{ code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸', supported: true },
 	{ code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷', supported: true },
 	{ code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', supported: true },

@@ -10,6 +10,11 @@
 
 	function getVoicesForLang(lang: string) {
 		const allVoices = window.speechSynthesis?.getVoices?.() || [];
+		if (lang === 'yue') {
+			// 优先匹配zh-HK、yue
+			const cantoneseVoices = allVoices.filter(v => v.lang.toLowerCase().includes('yue') || v.lang.toLowerCase() === 'zh-hk');
+			if (cantoneseVoices.length > 0) return cantoneseVoices;
+		}
 		return allVoices.filter(v => v.lang.startsWith(mapLang(lang)));
 	}
 
@@ -24,7 +29,12 @@
 		window.speechSynthesis.onvoiceschanged = handleVoiceInit;
 	}
 
-	$: if (analysis) handleVoiceInit();
+	$: if (analysis) {
+		handleVoiceInit();
+		if (analysis.sourceLanguage === 'yue' && voices.length === 0) {
+			alert('未检测到粤语朗读voice，部分浏览器可能不支持粤语语音合成。');
+		}
+	}
 
 	function speakLine(line: string, lang: string) {
 		if (!window.speechSynthesis) return;
@@ -39,6 +49,7 @@
 
 	function mapLang(code: string): string {
 		if (code === 'zh') return 'zh-CN';
+		if (code === 'yue') return 'zh-HK'; // 粤语
 		if (code === 'en') return 'en-US';
 		if (code === 'fr') return 'fr-FR';
 		if (code === 'es') return 'es-ES';

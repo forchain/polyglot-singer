@@ -317,6 +317,6 @@
 				</option>
 			{/each}
 		</select>
-	</div>
+		</div>
 	{/if}
 </div> 
