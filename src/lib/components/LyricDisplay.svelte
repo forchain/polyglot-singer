@@ -10,7 +10,7 @@
 		<div class="lyric-line">
 			<div class="flex flex-wrap gap-2 items-start">
 				{#each line.words as word}
-					<WordUnit {word} />
+					<WordUnit {word} sourceLanguage={analysis.sourceLanguage} />
 				{/each}
 			</div>
 		</div>
