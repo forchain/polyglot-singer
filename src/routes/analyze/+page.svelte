@@ -7,6 +7,7 @@
 	import type { LyricAnalysis } from '$lib/types/lyric.js';
 	import type { AIProvider } from '$lib/types/ai-providers.js';
 	import type { PageData } from './$types';
+	import { onMount } from 'svelte';
 	
 	export let data: PageData;
 	
@@ -23,6 +24,8 @@
 	let analysis: LyricAnalysis | null = null;
 	let isAnalyzing = false;
 	let error: string | null = null;
+	let historyList: { id: string; title?: string; artist?: string; createdAt?: string }[] = [];
+	let selectedHistoryId = '';
 	
 	async function handleAnalyze() {
 		if (!lyrics.trim()) {
@@ -99,6 +102,23 @@
 		sourceLanguage = targetLanguage;
 		targetLanguage = temp;
 	}
+
+	async function fetchHistory() {
+		const res = await fetch('/api/analyze/history');
+		const data = await res.json();
+		if (data.success) historyList = data.history;
+	}
+
+	async function handleHistorySelect() {
+		if (!selectedHistoryId) return;
+		const res = await fetch(`/api/analyze/history/${selectedHistoryId}`);
+		const data = await res.json();
+		if (data.success) {
+			analysis = data.analysis;
+		}
+	}
+
+	onMount(fetchHistory);
 </script>
 
 <svelte:head>
@@ -283,5 +303,20 @@
 			<!-- Lyric display -->
 			<LyricDisplay {analysis} />
 		</div>
+	{/if}
+
+	<!-- 历史记录下拉框 -->
+	{#if historyList.length > 0}
+	<div class="mb-4">
+		<label class="form-label">历史记录：</label>
+		<select bind:value={selectedHistoryId} on:change={handleHistorySelect} class="form-select">
+			<option value="">选择历史记录</option>
+			{#each historyList as item}
+				<option value={item.id}>
+					{(item.title || '未命名') + ' - ' + (item.artist || '未知歌手')}
+				</option>
+			{/each}
+		</select>
+	</div>
 	{/if}
 </div> 

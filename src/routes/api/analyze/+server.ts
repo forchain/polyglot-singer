@@ -2,6 +2,9 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { analyzeToLyrics } from '$lib/server/services/ai-service.js';
 import { z } from 'zod';
+import { db } from '$lib/server/database/connection';
+import { analyzedLyrics } from '$lib/server/database/schema';
+import { randomUUID } from 'crypto';
 
 // Request validation schema
 const analyzeRequestSchema = z.object({
@@ -33,6 +36,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			validatedData.artist,
 			validatedData.provider
 		);
+		
+		// 保存到analyzed_lyrics表
+		await db.insert(analyzedLyrics).values({
+			id: randomUUID(),
+			userId: user?.id || 'anonymous',
+			title: validatedData.title || '',
+			artist: validatedData.artist || '',
+			lyrics: validatedData.lyrics,
+			sourceLanguage: validatedData.sourceLanguage,
+			targetLanguage: validatedData.targetLanguage,
+			analysisJson: JSON.stringify(analysis)
+		});
 		
 		// Return successful response
 		return json({

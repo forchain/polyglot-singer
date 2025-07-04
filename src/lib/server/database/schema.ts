@@ -69,6 +69,19 @@ export const userPreferences = sqliteTable('user_preferences', {
 	updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
 });
 
+// 历史分析结果表
+export const analyzedLyrics = sqliteTable('analyzed_lyrics', {
+	id: text('id').primaryKey(),
+	userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+	title: text('title'),
+	artist: text('artist'),
+	lyrics: text('lyrics').notNull(),
+	sourceLanguage: text('source_language').notNull(),
+	targetLanguage: text('target_language').notNull(),
+	analysisJson: text('analysis_json').notNull(), // JSON string
+	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+});
+
 // Types derived from schema
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -76,4 +89,6 @@ export type Session = typeof sessions.$inferSelect;
 export type Lyric = typeof lyrics.$inferSelect;
 export type NewLyric = typeof lyrics.$inferInsert;
 export type LearningProgress = typeof learningProgress.$inferSelect;
-export type UserPreferences = typeof userPreferences.$inferSelect; 
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type AnalyzedLyric = typeof analyzedLyrics.$inferSelect;
+export type NewAnalyzedLyric = typeof analyzedLyrics.$inferInsert; 
