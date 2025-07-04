@@ -1,7 +1,8 @@
 // Client-side AI provider types and configurations
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'local' | 'custom';
+export type AIProvider = 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom';
 
 export const providerDisplayNames: Record<AIProvider, string> = {
+	deepseek: 'DeepSeek (DeepSeek-V3)',
 	openai: 'OpenAI (GPT-4o-mini, GPT-4.1-nano)',
 	anthropic: 'Anthropic (Claude)',
 	google: 'Google (Gemini)',
@@ -9,7 +10,7 @@ export const providerDisplayNames: Record<AIProvider, string> = {
 	custom: 'Custom Provider'
 };
 
-export const supportedProviders: AIProvider[] = ['openai', 'anthropic', 'google', 'local', 'custom'];
+export const supportedProviders: AIProvider[] = ['deepseek', 'openai', 'anthropic', 'google', 'local', 'custom'];
 
 export interface ProviderInfo {
 	name: string;
@@ -19,6 +20,12 @@ export interface ProviderInfo {
 }
 
 export const providerInfo: Record<AIProvider, ProviderInfo> = {
+	deepseek: {
+		name: 'DeepSeek',
+		description: 'DeepSeek-V3 model from DeepSeek AI',
+		requiresApiKey: true,
+		configUrl: 'https://platform.deepseek.com/api-keys'
+	},
 	openai: {
 		name: 'OpenAI',
 		description: 'GPT-4o-mini and GPT-4.1-nano models from OpenAI',

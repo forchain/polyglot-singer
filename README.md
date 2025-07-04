@@ -85,7 +85,7 @@ SvelteKit Full-Stack App
 - **Authentication**: Lucia Auth (SvelteKit-optimized)
 
 #### AI Integration
-- **Multi-Provider Support**: OpenAI GPT, Anthropic Claude, Google Gemini, Local Models (Ollama), Custom Providers
+- **Multi-Provider Support**: DeepSeek AI, OpenAI GPT, Anthropic Claude, Google Gemini, Local Models (Ollama), Custom Providers
 - **Dynamic Configuration**: Environment-based provider selection with fallback
 - **Phonetics**: Custom phonetic service with IPA libraries
 - **Language Detection**: Browser API + server-side validation
@@ -389,7 +389,7 @@ polyglot-singer/
 - [x] **Project Setup**: Create SvelteKit project with TypeScript, Tailwind CSS
 - [x] **Core UI Components**: LyricInput, LyricDisplay, WordUnit components
 - [x] **API Routes**: `/api/analyze` endpoint for lyric processing
-- [x] **AI Integration**: Multi-provider support (OpenAI, Claude, Gemini, Local)
+- [x] **AI Integration**: Multi-provider support (DeepSeek, OpenAI, Claude, Gemini, Local)
 - [x] **Basic Phonetics**: Simple phonetic transcription using IPA libraries
 - [x] **CSS Grid Layout**: Perfect word-to-annotation alignment
 - [x] **Form Actions**: Progressive enhancement for lyric submission
@@ -499,7 +499,7 @@ npx sv add drizzle # for database
 npm install openai better-sqlite3 @types/better-sqlite3
 
 # Set up environment variables
-echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
+echo "DEEPSEEK_API_KEY=your_deepseek_api_key_here" > .env
 echo "DATABASE_URL=sqlite:dev.db" >> .env
 
 # Start development server

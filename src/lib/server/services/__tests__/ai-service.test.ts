@@ -37,6 +37,22 @@ describe('AI Service', () => {
 	});
 
 	describe('analyzeToLyrics', () => {
+		it('should analyze lyrics with DeepSeek provider', async () => {
+			const result = await analyzeToLyrics(
+				'Hello world',
+				'en',
+				'zh',
+				'Test Song',
+				'Test Artist',
+				'deepseek'
+			);
+
+			expect(result).toBeDefined();
+			expect(result.sourceLanguage).toBe('en');
+			expect(result.targetLanguage).toBe('zh');
+			expect(result.lines).toHaveLength(1);
+		});
+
 		it('should analyze lyrics with OpenAI provider', async () => {
 			const result = await analyzeToLyrics(
 				'Hello world',
@@ -91,8 +107,20 @@ describe('AI Service', () => {
 });
 
 describe('AI Config', () => {
-	it('should get OpenAI config by default', () => {
+	it('should get DeepSeek config by default', () => {
 		const config = getAIConfig();
+		expect(config.provider).toBe('deepseek');
+		expect(config.baseURL).toBe('https://api.deepseek.com/v1');
+	});
+
+	it('should get DeepSeek config explicitly', () => {
+		const config = getAIConfig('deepseek');
+		expect(config.provider).toBe('deepseek');
+		expect(config.baseURL).toBe('https://api.deepseek.com/v1');
+	});
+
+	it('should get OpenAI config', () => {
+		const config = getAIConfig('openai');
 		expect(config.provider).toBe('openai');
 		expect(config.baseURL).toBe('https://api.openai.com/v1');
 	});

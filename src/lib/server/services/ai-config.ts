@@ -2,6 +2,9 @@
 // Supports multiple OpenAI-compatible providers
 import type { AIProvider } from '$lib/types/ai-providers.js';
 import {
+	DEEPSEEK_API_KEY,
+	DEEPSEEK_MODEL,
+	DEEPSEEK_MODEL_DETECTION,
 	OPENAI_API_KEY,
 	OPENAI_MODEL,
 	OPENAI_MODEL_DETECTION,
@@ -24,11 +27,11 @@ export interface AIConfig {
 
 // Default configuration
 export const defaultConfig: AIConfig = {
-	provider: 'openai',
-	apiKey: OPENAI_API_KEY || '',
-	baseURL: 'https://api.openai.com/v1',
-	model: OPENAI_MODEL || 'gpt-4o-mini',
-	detectionModel: OPENAI_MODEL_DETECTION || 'gpt-4.1-nano',
+	provider: 'deepseek',
+	apiKey: DEEPSEEK_API_KEY || '',
+	baseURL: 'https://api.deepseek.com/v1',
+	model: DEEPSEEK_MODEL || 'deepseek-chat',
+	detectionModel: DEEPSEEK_MODEL_DETECTION || 'deepseek-chat',
 	timeout: 30000,
 	maxTokens: 4000,
 	temperature: 0.3
@@ -36,6 +39,12 @@ export const defaultConfig: AIConfig = {
 
 // Provider-specific configurations
 export const providerConfigs: Record<string, Partial<AIConfig>> = {
+	deepseek: {
+		provider: 'deepseek',
+		baseURL: 'https://api.deepseek.com/v1',
+		model: 'deepseek-chat',
+		detectionModel: 'deepseek-chat'
+	},
 	openai: {
 		provider: 'openai',
 		baseURL: 'https://api.openai.com/v1',
@@ -68,10 +77,19 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 
 // Get configuration for a specific provider
 export function getAIConfig(provider?: string): AIConfig {
-	const providerName = provider || 'openai';
-	const baseConfig = providerConfigs[providerName] || providerConfigs.openai;
+	const providerName = provider || 'deepseek';
+	const baseConfig = providerConfigs[providerName] || providerConfigs.deepseek;
 
-	if (providerName === 'openai') {
+	if (providerName === 'deepseek') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			apiKey: DEEPSEEK_API_KEY || '',
+			baseURL: 'https://api.deepseek.com/v1',
+			model: DEEPSEEK_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: DEEPSEEK_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+		};
+	} else if (providerName === 'openai') {
 		return {
 			...defaultConfig,
 			...baseConfig,
