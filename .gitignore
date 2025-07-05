@@ -4,3 +4,5 @@ package-lock.json
 .env
 dev.db*
 .idea
+.vercel
+production.db
