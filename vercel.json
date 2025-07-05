@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "default": {
+      "runtime": "nodejs20.x"
+    }
+  }
+} 
