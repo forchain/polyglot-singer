@@ -1,6 +1,6 @@
 {
   "functions": {
-    "default": {
+    "**/*.js": {
       "runtime": "nodejs20.x"
     }
   }
