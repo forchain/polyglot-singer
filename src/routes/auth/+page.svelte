@@ -25,9 +25,9 @@
         if (data && data.session) {
           console.log('access_token:', data.session.access_token);
           console.log('refresh_token:', data.session.refresh_token);
-          // 手动写 cookie，Path 必须为 /
-          document.cookie = `sb-access-token=${data.session.access_token}; path=/`;
-          document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/`;
+          // 生产环境需要 secure; SameSite=None
+          document.cookie = `sb-access-token=${data.session.access_token}; path=/; secure; SameSite=None`;
+          document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; secure; SameSite=None`;
           console.log('当前 document.cookie:', document.cookie);
         }
         setTimeout(() => window.location.href = '/library', 500);
