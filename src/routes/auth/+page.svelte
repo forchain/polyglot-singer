@@ -1,8 +1,9 @@
 <script lang="ts">
   import { supabase } from '$lib/supabaseClient';
   import { goto } from '$app/navigation';
-  let email = '';
-  let password = '';
+  import { page } from '$app/stores';
+  let email = 'outliertony@gmail.com';
+  let password = '999999999';
   let error = '';
   let message = '';
   let mode: 'login' | 'register' = 'login';
@@ -10,18 +11,35 @@
   async function submit() {
     error = '';
     message = '';
+    console.log('登录请求:', email, password);
     if (mode === 'register') {
       const { error: err } = await supabase.auth.signUp({ email, password });
       if (err) error = err.message;
       else message = '注册成功，请查收邮箱激活！';
     } else {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+      console.log('登录响应:', data, err);
       if (err) error = err.message;
       else {
         message = '登录成功';
-        goto('/');
+        if (data && data.session) {
+          console.log('access_token:', data.session.access_token);
+          console.log('refresh_token:', data.session.refresh_token);
+          // 手动写 cookie，Path 必须为 /
+          document.cookie = `sb-access-token=${data.session.access_token}; path=/`;
+          document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/`;
+          console.log('当前 document.cookie:', document.cookie);
+        }
+        setTimeout(() => location.reload(), 500);
       }
     }
+  }
+
+  // 页面加载后检测 user 是否为 null，如果是则显示同步失败提示
+  $: if (message === '登录成功' && !error) {
+    // 等待刷新
+  } else if ($page && $page.data && $page.data.user === null && message === '') {
+    error = '用户信息同步失败，请联系管理员';
   }
 </script>
 

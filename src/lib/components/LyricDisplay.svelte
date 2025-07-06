@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LyricAnalysis } from '$lib/types/lyric.js';
 	import WordUnit from './WordUnit.svelte';
+	import { onMount } from 'svelte';
 
 	export let analysis: LyricAnalysis;
 
@@ -9,13 +10,10 @@
 	let selectedVoice: string = '';
 
 	function getVoicesForLang(lang: string) {
-		const allVoices = window.speechSynthesis?.getVoices?.() || [];
-		if (lang === 'yue') {
-			// 优先匹配zh-HK、yue
-			const cantoneseVoices = allVoices.filter(v => v.lang.toLowerCase().includes('yue') || v.lang.toLowerCase() === 'zh-hk');
-			if (cantoneseVoices.length > 0) return cantoneseVoices;
+		if (typeof window !== 'undefined') {
+			return window.speechSynthesis.getVoices().filter(v => v.lang.startsWith(lang));
 		}
-		return allVoices.filter(v => v.lang.startsWith(mapLang(lang)));
+		return [];
 	}
 
 	function handleVoiceInit() {
@@ -25,16 +23,15 @@
 		}
 	}
 
-	if (typeof window !== 'undefined' && window.speechSynthesis) {
-		window.speechSynthesis.onvoiceschanged = handleVoiceInit;
-	}
-
-	$: if (analysis) {
-		handleVoiceInit();
-		if (analysis.sourceLanguage === 'yue' && voices.length === 0) {
-			alert('未检测到粤语朗读voice，部分浏览器可能不支持粤语语音合成。');
+	onMount(() => {
+		if (typeof window !== 'undefined') {
+			voices = window.speechSynthesis.getVoices();
+			handleVoiceInit();
+			if (analysis.sourceLanguage === 'yue' && voices.length === 0) {
+				alert('未检测到粤语朗读voice，部分浏览器可能不支持粤语语音合成。');
+			}
 		}
-	}
+	});
 
 	function speakLine(line: string, lang: string) {
 		if (!window.speechSynthesis) return;

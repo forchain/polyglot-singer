@@ -106,9 +106,13 @@
 							class="flex items-center space-x-2 bg-gray-100 hover:bg-gray-200 rounded-full py-2 px-4 transition-colors duration-200"
 						>
 							<div class="w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-								{(user.display_name || user.username).charAt(0).toUpperCase()}
+								{#if user && user.email}
+									{user.email.charAt(0).toUpperCase()}
+								{/if}
 							</div>
-							<span class="text-gray-700 font-medium">{user.display_name || user.username}</span>
+							<span class="text-gray-700 font-medium">
+								{user.display_name ?? user.username ?? user.email ?? '未命名用户'}
+							</span>
 							<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
 							</svg>

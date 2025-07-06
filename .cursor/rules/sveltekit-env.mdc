@@ -1,0 +1,22 @@
+# SvelteKit 服务端环境变量读取规范
+
+在 SvelteKit 服务端代码（如 hooks.server.ts、API route、server 端 util 等）中，**必须使用 `$env/static/private` 或 `$env/dynamic/private`** 读取环境变量，禁止直接用 `process.env`。
+
+- 正确示例：
+  ```ts
+  import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
+  ```
+
+- 错误示例：
+  ```ts
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  ```
+
+**原因：**
+- SvelteKit 只会自动注入 `$env/static/private`/`$env/dynamic/private` 的变量到构建产物，`process.env` 在 Vercel/生产环境下可能拿不到变量，导致“is not exported by virtual:env/static/private”或“xxx is required”报错。
+- 本地开发和 Vercel 部署都必须统一用 SvelteKit 的环境变量导入方式。
+
+**每次涉及服务端环境变量读取时都必须遵循本规则。**
+
+alwaysApply: true
+---

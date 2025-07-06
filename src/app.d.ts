@@ -5,6 +5,7 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			user?: import('@supabase/supabase-js').User | null;
+			userSyncError?: string;
 		}
 		interface PageData {
 			user?: import('@supabase/supabase-js').User | null;
