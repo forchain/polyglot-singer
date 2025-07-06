@@ -1,0 +1,1 @@
+ALTER TABLE "analyzed_lyrics" ADD COLUMN "voice" text;

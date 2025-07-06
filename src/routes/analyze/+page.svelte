@@ -9,6 +9,7 @@
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	
 	export let data: PageData;
 	
@@ -25,8 +26,9 @@
 	let analysis: LyricAnalysis | null = null;
 	let isAnalyzing = false;
 	let error: string | null = null;
-	let historyList: { id: string; title?: string; artist?: string; createdAt?: string }[] = [];
-	let selectedHistoryId = '';
+	let selectedVoice = '';
+	let defaultVoices: Record<string, string> = {};
+	let isLoadingAnalysis = false;
 	
 	async function handleAnalyze() {
 		if (!lyrics.trim()) {
@@ -55,8 +57,10 @@
 			
 			const result = await response.json();
 			
-			if (result.success) {
-				analysis = result.analysis;
+			if (result.success && result.analysis && result.analysis.id) {
+				// 分析成功后跳转到分析结果页面
+				goto(`/analyze/history/${result.analysis.id}`);
+				return;
 			} else {
 				error = result.error || 'Analysis failed';
 			}
@@ -104,36 +108,62 @@
 		targetLanguage = temp;
 	}
 
-	async function fetchHistory() {
-		const res = await fetch('/api/analyze/history');
-		const data = await res.json();
-		if (data.success) historyList = data.history;
-	}
-
-	async function handleHistorySelect() {
-		if (!selectedHistoryId) return;
-		const res = await fetch(`/api/analyze/history/${selectedHistoryId}`);
-		const data = await res.json();
-		if (data.success) {
-			analysis = data.analysis;
+	async function loadDefaultVoices() {
+		// 优先后端
+		try {
+			const res = await fetch('/api/user/preferences');
+			const data = await res.json();
+			console.log('【voice debug】后端返回', data);
+			if (data.success && data.preferences && data.preferences.defaultVoices) {
+				defaultVoices = JSON.parse(data.preferences.defaultVoices);
+				console.log('【voice debug】使用后端defaultVoices', defaultVoices);
+			} else {
+				const saved = localStorage.getItem('defaultVoices');
+				if (saved) {
+					defaultVoices = JSON.parse(saved);
+					console.log('【voice debug】后端无数据，使用本地defaultVoices', defaultVoices);
+				}
+			}
+		} catch (e) {
+			const saved = localStorage.getItem('defaultVoices');
+			if (saved) {
+				defaultVoices = JSON.parse(saved);
+				console.log('【voice debug】后端异常，使用本地defaultVoices', defaultVoices);
+			}
+			console.log('【voice debug】loadDefaultVoices异常', e);
 		}
 	}
 
-	onMount(() => {
-		fetchHistory();
+	onMount(async () => {
+		await loadDefaultVoices();
 		// 检查URL参数historyId，自动加载分析
 		const url = new URL(window.location.href);
 		const historyId = url.searchParams.get('historyId');
 		if (historyId) {
+			isLoadingAnalysis = true;
 			fetch(`/api/analyze/history/${historyId}`)
 				.then(res => res.json())
 				.then(data => {
 					if (data.success) {
 						analysis = data.analysis;
+						// 自动应用全局voice
+						if (analysis && analysis.sourceLanguage && defaultVoices[analysis.sourceLanguage]) {
+							selectedVoice = defaultVoices[analysis.sourceLanguage];
+							console.log('【voice debug】historyId加载，设置selectedVoice', selectedVoice);
+						}
 					}
+				})
+				.finally(() => {
+					isLoadingAnalysis = false;
 				});
 		}
 	});
+
+	$: if (analysis && analysis.sourceLanguage && defaultVoices[analysis.sourceLanguage]) {
+		selectedVoice = defaultVoices[analysis.sourceLanguage];
+		console.log('【voice debug】$reactive设置selectedVoice', selectedVoice, analysis.sourceLanguage, defaultVoices);
+	}
+
 </script>
 
 <svelte:head>
@@ -151,7 +181,12 @@
 		</p>
 	</div>
 	
-	{#if !analysis}
+	{#if isLoadingAnalysis}
+		<div class="flex flex-col items-center justify-center py-16">
+			<div class="loading-spinner w-8 h-8 mb-4"></div>
+			<p class="text-gray-500 text-lg">正在加载歌词分析…</p>
+		</div>
+	{:else}
 		<!-- Input Form -->
 		<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
 			<form on:submit|preventDefault={handleAnalyze} class="space-y-6">
@@ -276,57 +311,5 @@
 				</a>
 			</div>
 		{/if}
-	{:else}
-		<!-- Analysis Results -->
-		<div class="space-y-6">
-			<!-- Header with song info and controls -->
-			<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-				<div class="flex flex-col md:flex-row md:items-center md:justify-between">
-					<div>
-						{#if analysis.title || analysis.artist}
-							<h2 class="text-2xl font-bold text-gray-900">
-								{analysis.title || 'Untitled'}
-								{#if analysis.artist}
-									<span class="text-gray-600">by {analysis.artist}</span>
-								{/if}
-							</h2>
-						{:else}
-							<h2 class="text-2xl font-bold text-gray-900">Analyzed Lyrics</h2>
-						{/if}
-						<p class="text-gray-600 mt-1">
-							{analysis.sourceLanguage.toUpperCase()} → {analysis.targetLanguage.toUpperCase()}
-						</p>
-					</div>
-					<div class="mt-4 md:mt-0 flex space-x-3">
-						<button on:click={handleReset} class="btn-secondary">
-							📝 Analyze New Song
-						</button>
-						{#if data.user}
-							<button class="btn-primary">
-								💾 Save to Library
-							</button>
-						{/if}
-					</div>
-				</div>
-			</div>
-			
-			<!-- Lyric display -->
-			<LyricDisplay {analysis} />
-		</div>
-	{/if}
-
-	<!-- 历史记录下拉框 -->
-	{#if historyList.length > 0}
-	<div class="mb-4">
-		<label class="form-label">历史记录：</label>
-		<select bind:value={selectedHistoryId} on:change={handleHistorySelect} class="form-select">
-			<option value="">选择历史记录</option>
-			{#each historyList as item}
-				<option value={item.id}>
-					{(item.title || '未命名') + ' - ' + (item.artist || '未知歌手')}
-				</option>
-			{/each}
-		</select>
-		</div>
 	{/if}
 </div> 

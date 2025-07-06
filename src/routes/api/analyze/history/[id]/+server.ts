@@ -15,5 +15,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	if (!row[0] || row[0].userId !== user.id) {
 		return json({ success: false, error: 'Not found' }, { status: 404 });
 	}
-	return json({ success: true, analysis: JSON.parse(row[0].analysisJson) });
+	const analysis = { ...JSON.parse(row[0].analysisJson), id: row[0].id };
+	const voice = row[0].voice || null;
+	return json({ success: true, analysis, voice });
 }; 

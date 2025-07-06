@@ -4,10 +4,10 @@
 	import { onMount } from 'svelte';
 
 	export let analysis: LyricAnalysis;
+	export let selectedVoice: string = '';
 
 	// 全局voice选择
 	let voices: SpeechSynthesisVoice[] = [];
-	let selectedVoice: string = '';
 
 	function getVoicesForLang(lang: string) {
 		if (typeof window !== 'undefined') {
@@ -24,12 +24,14 @@
 	}
 
 	onMount(() => {
-		if (typeof window !== 'undefined') {
-			voices = window.speechSynthesis.getVoices();
+		if (typeof window !== 'undefined' && window.speechSynthesis) {
+			// 先尝试同步获取
 			handleVoiceInit();
-			if (analysis.sourceLanguage === 'yue' && voices.length === 0) {
-				alert('未检测到粤语朗读voice，部分浏览器可能不支持粤语语音合成。');
-			}
+
+			// 监听 voiceschanged 事件，异步加载
+			window.speechSynthesis.onvoiceschanged = () => {
+				handleVoiceInit();
+			};
 		}
 	});
 
@@ -58,19 +60,31 @@
 		if (code === 'ru') return 'ru-RU';
 		return code;
 	}
+
+	function getSortedVoices() {
+		if (!voices || !selectedVoice) return voices;
+		const selected = voices.find(v => v.voiceURI === selectedVoice);
+		const rest = voices.filter(v => v.voiceURI !== selectedVoice);
+		console.log('【voice debug】getSortedVoices', selected, rest);
+		return selected ? [selected, ...rest] : voices;
+	}
 </script>
 
 <!-- 全局voice选择 -->
 <div class="flex items-center gap-2 mb-4">
 	<label class="text-sm text-gray-600">发音Voice：</label>
-	<select
-		bind:value={selectedVoice}
-		class="text-xs border rounded px-1 py-0.5"
-	>
-		{#each voices as v}
-			<option value={v.voiceURI}>{v.name} ({v.lang})</option>
-		{/each}
-	</select>
+	{#if voices.length > 0}
+		<select
+			bind:value={selectedVoice}
+			class="text-xs border rounded px-1 py-0.5"
+		>
+			{#each getSortedVoices() as v}
+				<option value={v.voiceURI}>{v.name} ({v.lang})</option>
+			{/each}
+		</select>
+	{:else}
+		<span class="text-xs text-gray-400">无可用发音</span>
+	{/if}
 </div>
 
 <div class="lyric-display space-y-6">

@@ -64,6 +64,7 @@ export const userPreferences = pgTable('user_preferences', {
 	phoneticStyle: text('phonetic_style').default('ipa'), // 'ipa' or 'simplified'
 	showPinyin: boolean('show_pinyin').default(true),
 	autoSave: boolean('auto_save').default(true),
+	defaultVoices: text('default_voices'), // 新增，存储JSON
 	createdAt: timestamp('created_at').defaultNow(),
 	updatedAt: timestamp('updated_at').defaultNow()
 });

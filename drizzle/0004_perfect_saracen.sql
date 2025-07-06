@@ -1,0 +1,1 @@
+ALTER TABLE "analyzed_lyrics" DROP COLUMN IF EXISTS "voice";

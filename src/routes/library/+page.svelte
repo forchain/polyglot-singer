@@ -56,7 +56,7 @@
                 <div class="font-medium">{item.title || '未命名'}</div>
                 <div class="text-xs text-gray-500">{item.createdAt?.slice(0, 10) || ''}</div>
               </div>
-              <a href="/analyze?historyId={item.id}" class="text-blue-600 hover:underline">查看分析</a>
+              <a href={`/analyze/history/${item.id}`} class="text-blue-600 hover:underline">查看分析</a>
             </li>
           {/each}
         </ul>

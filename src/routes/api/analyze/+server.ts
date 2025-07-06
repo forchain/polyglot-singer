@@ -12,7 +12,8 @@ const analyzeRequestSchema = z.object({
 	targetLanguage: z.string().optional().default('zh'),
 	provider: z.string().optional().default('deepseek'),
 	title: z.string().optional(),
-	artist: z.string().optional()
+	artist: z.string().optional(),
+	voice: z.string().optional()
 });
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -61,7 +62,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			lyrics: validatedData.lyrics,
 			sourceLanguage: validatedData.sourceLanguage,
 			targetLanguage: validatedData.targetLanguage,
-			analysisJson: JSON.stringify(analysis)
+			analysisJson: JSON.stringify(analysis),
+			voice: validatedData.voice || null
 		};
 		
 		if (id) {
@@ -70,10 +72,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		
 		await db.insert(schema.analyzedLyrics).values(insertData);
 		
+		// 查询刚插入的id（Postgres可用RETURNING）
+		const inserted = await db.select({ id: schema.analyzedLyrics.id }).from(schema.analyzedLyrics).orderBy(schema.analyzedLyrics.createdAt).limit(1);
+		const analysisId = inserted[0]?.id;
+		
 		// Return successful response
 		return json({
 			success: true,
-			analysis,
+			analysis: { ...analysis, id: analysisId },
 			metadata: {
 				userId: user?.id,
 				timestamp: new Date().toISOString()
