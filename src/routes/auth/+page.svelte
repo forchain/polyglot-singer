@@ -30,7 +30,7 @@
           document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/`;
           console.log('当前 document.cookie:', document.cookie);
         }
-        setTimeout(() => location.reload(), 500);
+        setTimeout(() => window.location.href = '/library', 500);
       }
     }
   }
