@@ -1,15 +1,225 @@
 # Polyglot Singer 🎵
 *Become a polyglot by singing songs*
 
-A innovative language learning platform that combines the joy of singing with effective vocabulary acquisition through AI-powered lyric analysis and phonetic annotation.
+A multilingual song lyrics analysis and pronunciation learning application built with SvelteKit.
+
+## Features
+
+- 🎵 **Lyric Analysis**: AI-powered word-by-word translation and phonetic transcription
+- 🌍 **Multi-language Support**: English, Chinese (Mandarin), Cantonese, Japanese, Korean, Spanish, French, German, Italian, Portuguese, Russian
+- 🔊 **Text-to-Speech**: Click to hear pronunciation of individual words or entire lines
+- 🤖 **Multiple AI Providers**: DeepSeek (default), OpenAI, Anthropic Claude, Google Gemini, Local (Ollama), and custom providers
+- 📱 **Responsive Design**: Works on desktop and mobile devices
+- 💾 **History Tracking**: Save and revisit your analyzed lyrics
+- 🎯 **Two-step Analysis**: Overall translation + detailed word-by-word breakdown
+
+## Database Support
+
+The application supports two database modes:
+
+### SQLite (Default - Local Development)
+- Perfect for local development and testing
+- No external dependencies required
+- Automatic setup with `npm run db:setup`
+
+### PostgreSQL/Supabase (Production Deployment)
+- Recommended for production deployments
+- Compatible with Vercel and other cloud platforms
+- Easy setup with Supabase
+
+See [docs/SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for detailed setup instructions.
+
+## Quick Start
+
+### 🚀 One-Command Setup (Recommended)
+
+```bash
+# Clone and setup everything automatically
+git clone <repository-url>
+cd polyglot-singer
+./start.sh
+```
+
+This will automatically:
+- Check and setup environment configuration
+- Install dependencies
+- Setup database
+- Start the development server
+
+### Manual Setup
+
+#### 1. Clone and Install
+
+```bash
+git clone <repository-url>
+cd polyglot-singer
+npm install
+```
+
+#### 2. Environment Setup
+
+Copy the environment template:
+
+```bash
+cp env.example .env
+```
+
+Edit `.env` with your configuration:
+
+```bash
+# Database (choose one)
+DATABASE_TYPE=sqlite              # For local development
+DATABASE_URL=sqlite:dev.db
+
+# Or for production with Supabase:
+# DATABASE_TYPE=postgres
+# DATABASE_URL=postgresql://user:password@host:port/database
+
+# AI Provider (DeepSeek is default)
+AI_PROVIDER=deepseek
+DEEPSEEK_API_KEY=your_api_key_here
+
+# Security
+SESSION_SECRET=your_random_32_character_secret
+```
+
+#### 3. Database Setup
+
+```bash
+npm run db:setup
+```
+
+#### 4. Development
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:5173` to start using the application.
+
+## Scripts
+
+### 🚀 Smart Startup Scripts
+
+| Command | Description |
+|---------|-------------|
+| `./start.sh` | **Recommended**: Complete setup and start (Shell version) |
+| `npm run start` | Smart startup with environment checks (Node.js version) |
+| `npm run start:shell` | Call shell startup script via npm |
+
+### 🔧 Environment Management
+
+| Command | Description |
+|---------|-------------|
+| `npm run env:check` | Check for new environment variables and update .env |
+| `node scripts/check-env.js` | Direct environment check script |
+
+### 🗄️ Database Management
+
+| Command | Description |
+|---------|-------------|
+| `npm run db:setup` | Setup database (generate + migrate) |
+| `npm run db:generate` | Generate migrations |
+| `npm run db:migrate` | Apply migrations |
+| `npm run db:studio` | Open Drizzle Studio |
+| `npm run db:reset` | Reset SQLite database (dev only) |
+
+### 🛠️ Development Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run check` | Type checking |
+| `npm run lint` | Lint code |
+| `npm run format` | Format code |
+| `npm run test` | Run tests |
+
+See [docs/SCRIPTS_USAGE.md](./docs/SCRIPTS_USAGE.md) for detailed script documentation.
+
+## AI Providers
+
+The application supports multiple AI providers:
+
+- **DeepSeek** (default): Cost-effective and high-quality
+- **OpenAI**: GPT-4 models for premium quality
+- **Anthropic Claude**: Excellent for nuanced translations
+- **Google Gemini**: Fast and reliable
+- **Local (Ollama)**: Run models locally for privacy
+- **Custom**: Bring your own OpenAI-compatible API
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. **Set up Supabase database** (see [docs/SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md))
+
+2. **Configure environment variables** in Vercel:
+   - `DATABASE_TYPE=postgres`
+   - `DATABASE_URL=your_supabase_connection_string`
+   - `AI_PROVIDER=deepseek` (or your preferred provider)
+   - `DEEPSEEK_API_KEY=your_api_key`
+   - `SESSION_SECRET=random_32_character_string`
+
+3. **Deploy**:
+   ```bash
+   npm run build
+   vercel --prod
+   ```
+
+### Other Platforms
+
+The application can be deployed to any platform that supports Node.js and PostgreSQL:
+
+- Railway
+- Render
+- DigitalOcean App Platform
+- Heroku
+- AWS/GCP/Azure
+
+## Project Structure
+
+```
+src/
+├── lib/
+│   ├── components/          # Svelte components
+│   ├── server/
+│   │   ├── database/        # Database schemas and connections
+│   │   └── services/        # Business logic (AI, auth)
+│   ├── styles/              # Global styles
+│   └── types/               # TypeScript definitions
+├── routes/                  # SvelteKit routes
+├── scripts/                 # Automation scripts
+├── docs/                    # Documentation
+└── app.html                 # HTML template
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+[MIT License](LICENSE)
+
+## Support
+
+For issues and questions:
+- Check the [docs/SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for database setup
+- Review the [environment variables](./env.example) configuration
+- See [docs/SCRIPTS_USAGE.md](./docs/SCRIPTS_USAGE.md) for script documentation
+- Open an issue on GitHub
 
 ## 🎯 Project Vision
 
-Transform language learning into an enjoyable musical experience by leveraging the natural advantages of songs:
-- **Universal Appeal**: Singing is accessible and enjoyable for everyone
-- **Memory Enhancement**: Melodies help retain lyrics and vocabulary
-- **High Engagement**: Entertainment value drives sustained learning motivation
-- **Natural Repetition**: Songs encourage repeated practice without fatigue
+*Become a polyglot by singing songs*
+
+A innovative language learning platform that combines the joy of singing with effective vocabulary acquisition through AI-powered lyric analysis and phonetic annotation.
 
 ## 📋 Requirements Analysis
 

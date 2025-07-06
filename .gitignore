@@ -2,6 +2,7 @@ node_modules
 .svelte-kit
 package-lock.json
 .env
+.env.backup
 dev.db*
 .idea
 .vercel

@@ -17,7 +17,13 @@
     "test:integration": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:setup": "node scripts/setup-database.js",
+    "db:reset": "rm -f dev.db && npm run db:setup",
+    "env:check": "node scripts/check-env.js",
+    "db:test": "node scripts/test-db-connection.js",
+    "start": "node scripts/start.js",
+    "start:shell": "./start.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.45.0",
@@ -50,10 +56,14 @@
   "type": "module",
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "^1.0.7",
+    "@lucia-auth/adapter-postgresql": "^3.1.2",
+    "@supabase/supabase-js": "^2.50.3",
+    "@types/pg": "^8.15.4",
     "better-sqlite3": "^11.0.0",
-    "drizzle-orm": "^0.31.2",
+    "drizzle-orm": "^0.31.4",
     "lucia": "^3.2.0",
     "openai": "^4.52.1",
+    "postgres": "^3.4.7",
     "zod": "^3.23.8"
   },
   "volta": {

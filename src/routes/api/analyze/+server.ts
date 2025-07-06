@@ -2,8 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { analyzeToLyrics } from '$lib/server/services/ai-service.js';
 import { z } from 'zod';
-import { db } from '$lib/server/database/connection';
-import { analyzedLyrics } from '$lib/server/database/schema';
+import { db, schema, databaseType } from '$lib/server/database/connection';
 import { randomUUID } from 'crypto';
 
 // Request validation schema
@@ -37,9 +36,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			validatedData.provider
 		);
 		
+		// Generate ID based on database type
+		const id = (databaseType === 'postgres' || databaseType === 'supabase') 
+			? undefined  // PostgreSQL will auto-generate UUID
+			: randomUUID(); // SQLite needs explicit ID
+		
 		// 保存到analyzed_lyrics表
-		await db.insert(analyzedLyrics).values({
-			id: randomUUID(),
+		const insertData: any = {
 			userId: user?.id || 'anonymous',
 			title: validatedData.title || '',
 			artist: validatedData.artist || '',
@@ -47,7 +50,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			sourceLanguage: validatedData.sourceLanguage,
 			targetLanguage: validatedData.targetLanguage,
 			analysisJson: JSON.stringify(analysis)
-		});
+		};
+		
+		if (id) {
+			insertData.id = id;
+		}
+		
+		await db.insert(schema.analyzedLyrics).values(insertData);
 		
 		// Return successful response
 		return json({
