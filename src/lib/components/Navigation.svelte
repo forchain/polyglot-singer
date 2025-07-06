@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { supabase } from '$lib/supabaseClient';
 	import { goto } from '$app/navigation';
 	import type { User } from '$lib/types/user.js';
 	
@@ -29,6 +31,16 @@
 		if (!target.closest('.mobile-menu-container')) {
 			showMobileMenu = false;
 		}
+	}
+
+	onMount(async () => {
+		const { data } = await supabase.auth.getUser();
+		user = data.user;
+	});
+
+	async function logout() {
+		await supabase.auth.signOut();
+		goto('/auth');
 	}
 </script>
 
@@ -108,7 +120,7 @@
 								<a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
 								<hr class="my-1">
 								<button 
-									on:click={handleSignOut}
+									on:click={logout}
 									class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 								>
 									Sign Out
@@ -118,13 +130,13 @@
 					</div>
 				{:else}
 					<a 
-						href="/login" 
+						href="/auth" 
 						class="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200"
 					>
 						Sign In
 					</a>
 					<a 
-						href="/register" 
+						href="/auth" 
 						class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
 					>
 						Get Started
@@ -161,15 +173,15 @@
 						<a href="/profile" class="block text-gray-600 hover:text-gray-900 font-medium">Profile</a>
 						<a href="/settings" class="block text-gray-600 hover:text-gray-900 font-medium">Settings</a>
 						<button 
-							on:click={handleSignOut}
+							on:click={logout}
 							class="block w-full text-left text-gray-600 hover:text-gray-900 font-medium"
 						>
 							Sign Out
 						</button>
 					{:else}
 						<a href="/demo" class="block text-gray-600 hover:text-gray-900 font-medium">Demo</a>
-						<a href="/login" class="block text-gray-600 hover:text-gray-900 font-medium">Sign In</a>
-						<a href="/register" class="block bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-block">Get Started</a>
+						<a href="/auth" class="block text-gray-600 hover:text-gray-900 font-medium">Sign In</a>
+						<a href="/auth" class="block bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-block">Get Started</a>
 					{/if}
 				</div>
 			</div>

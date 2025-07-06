@@ -107,47 +107,7 @@ if (process.env.DATABASE_TYPE === 'postgres') {
     }
 }
 
-// 3. 测试 SQLite 连接
-if (process.env.DATABASE_TYPE === 'sqlite') {
-    console.log('🗄️ 测试 SQLite 连接...');
-    
-    try {
-        const { Database } = await import('better-sqlite3');
-        const dbPath = process.env.DATABASE_URL.replace('sqlite:', '');
-        
-        console.log(`⏳ 正在连接 SQLite 数据库: ${dbPath}`);
-        const db = new Database(dbPath);
-        
-        console.log('✅ SQLite 连接成功!');
-        
-        // 测试查询
-        console.log('⏳ 测试查询...');
-        const version = db.prepare('SELECT sqlite_version()').get();
-        console.log(`✅ 查询成功! SQLite 版本: ${version['sqlite_version()']}`);
-        
-        // 检查表
-        console.log('⏳ 检查现有表...');
-        const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-        
-        if (tables.length > 0) {
-            console.log('📋 现有表:');
-            tables.forEach(table => {
-                console.log(`  - ${table.name}`);
-            });
-        } else {
-            console.log('📋 数据库中没有表');
-        }
-        
-        db.close();
-        console.log('✅ SQLite 连接测试完成\n');
-        
-    } catch (error) {
-        console.error('❌ SQLite 连接失败:');
-        console.error(`错误类型: ${error.constructor.name}`);
-        console.error(`错误消息: ${error.message}`);
-        console.log('');
-    }
-}
+
 
 // 4. 测试 Drizzle 配置
 console.log('🔧 测试 Drizzle 配置...');

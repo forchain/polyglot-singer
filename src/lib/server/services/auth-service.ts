@@ -1,21 +1,16 @@
 import { Lucia } from 'lucia';
-import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
-import { db, databaseType } from '$lib/server/database/connection.js';
+import { PostgresJsAdapter } from '@lucia-auth/adapter-postgresql';
+import { db, pg } from '$lib/server/database/connection.js';
 import { dev } from '$app/environment';
 
-// For now, we'll use SQLite adapter as the default
-// TODO: Add proper PostgreSQL support once adapter is configured
-let adapter: any;
+// Import PostgreSQL schema
+const { users, sessions } = await import('$lib/server/database/schema.js');
 
-if (databaseType === 'postgres' || databaseType === 'supabase') {
-	// For now, throw an error for PostgreSQL until we fix the adapter
-	throw new Error('PostgreSQL support is not yet fully implemented. Please use SQLite for now.');
-} else {
-	// Import SQLite schema
-	const { users, sessions } = await import('$lib/server/database/schema.js');
-	// @ts-ignore - Temporary fix for type issues
-	adapter = new DrizzleSQLiteAdapter(db, sessions, users);
-}
+// Use PostgreSQL adapter
+const adapter = new PostgresJsAdapter(pg!, {
+	user: 'users',
+	session: 'sessions'
+});
 
 // Initialize Lucia
 export const lucia = new Lucia(adapter, {

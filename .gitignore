@@ -3,7 +3,7 @@ node_modules
 package-lock.json
 .env
 .env.backup
-dev.db*
+
 .idea
 .vercel
-production.db
+

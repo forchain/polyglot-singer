@@ -1,29 +1,29 @@
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core';
+import { pgTable, text, integer, timestamp, boolean, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Users table
-export const users = sqliteTable('users', {
-	id: text('id').primaryKey(),
+export const users = pgTable('users', {
+	id: uuid('id').primaryKey().defaultRandom(),
 	username: text('username').notNull().unique(),
 	email: text('email').notNull().unique(),
 	hashedPassword: text('hashed_password').notNull(),
 	display_name: text('display_name'),
-	created_at: integer('created_at').notNull()
+	created_at: timestamp('created_at').notNull().defaultNow()
 });
 
 // Sessions table for Lucia Auth
-export const sessions = sqliteTable('sessions', {
+export const sessions = pgTable('sessions', {
 	id: text('id').primaryKey(),
-	userId: text('user_id')
+	userId: uuid('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	expiresAt: integer('expires_at').notNull()
+	expiresAt: timestamp('expires_at').notNull()
 });
 
 // Lyrics table for storing processed songs
-export const lyrics = sqliteTable('lyrics', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
+export const lyrics = pgTable('lyrics', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	userId: uuid('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
@@ -32,54 +32,54 @@ export const lyrics = sqliteTable('lyrics', {
 	processedData: text('processed_data').notNull(), // JSON string of analysis
 	sourceLanguage: text('source_language').notNull(),
 	targetLanguage: text('target_language').notNull(),
-	isPublic: integer('is_public', { mode: 'boolean' }).default(false),
-	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+	isPublic: boolean('is_public').default(false),
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
 });
 
 // Learning progress table
-export const learningProgress = sqliteTable('learning_progress', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
+export const learningProgress = pgTable('learning_progress', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	userId: uuid('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	lyricId: text('lyric_id')
+	lyricId: uuid('lyric_id')
 		.notNull()
 		.references(() => lyrics.id, { onDelete: 'cascade' }),
 	practiceCount: integer('practice_count').default(0),
-	lastPracticedAt: integer('last_practiced_at', { mode: 'timestamp' }),
+	lastPracticedAt: timestamp('last_practiced_at'),
 	masteredWords: text('mastered_words'), // JSON array of mastered word indices
-	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
 });
 
 // User preferences table
-export const userPreferences = sqliteTable('user_preferences', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
+export const userPreferences = pgTable('user_preferences', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	userId: uuid('user_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' })
 		.unique(),
 	preferredSourceLanguage: text('preferred_source_language').default('en'),
 	preferredTargetLanguage: text('preferred_target_language').default('zh'),
 	phoneticStyle: text('phonetic_style').default('ipa'), // 'ipa' or 'simplified'
-	showPinyin: integer('show_pinyin', { mode: 'boolean' }).default(true),
-	autoSave: integer('auto_save', { mode: 'boolean' }).default(true),
-	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
-	updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+	showPinyin: boolean('show_pinyin').default(true),
+	autoSave: boolean('auto_save').default(true),
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
 });
 
 // 历史分析结果表
-export const analyzedLyrics = sqliteTable('analyzed_lyrics', {
-	id: text('id').primaryKey(),
-	userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+export const analyzedLyrics = pgTable('analyzed_lyrics', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	userId: text('user_id'), // 允许匿名用户，使用文本类型
 	title: text('title'),
 	artist: text('artist'),
 	lyrics: text('lyrics').notNull(),
 	sourceLanguage: text('source_language').notNull(),
 	targetLanguage: text('target_language').notNull(),
 	analysisJson: text('analysis_json').notNull(), // JSON string
-	createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`)
+	createdAt: timestamp('created_at').defaultNow()
 });
 
 // Types derived from schema

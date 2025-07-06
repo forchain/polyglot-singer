@@ -1,40 +1,16 @@
 import type { Handle } from '@sveltejs/kit';
-import { lucia } from '$lib/server/services/auth-service.js';
+import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// Get session ID from cookies
-	const sessionId = event.cookies.get(lucia.sessionCookieName);
-	
-	if (!sessionId) {
+	const access_token = event.cookies.get('sb-access-token') || event.cookies.get('supabase-auth-token');
+	if (access_token) {
+		const { data, error } = await supabase.auth.getUser(access_token);
+		event.locals.user = data?.user ?? null;
+	} else {
 		event.locals.user = null;
-		event.locals.session = null;
-		return resolve(event);
 	}
-
-	// Validate session
-	const { session, user } = await lucia.validateSession(sessionId);
-	
-	if (session && session.fresh) {
-		// Refresh session cookie
-		const sessionCookie = lucia.createSessionCookie(session.id);
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
-	}
-	
-	if (!session) {
-		// Remove invalid session cookie
-		const sessionCookie = lucia.createBlankSessionCookie();
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
-			path: '.',
-			...sessionCookie.attributes
-		});
-	}
-
-	// Set locals for use in pages and endpoints
-	event.locals.user = user;
-	event.locals.session = session;
-
 	return resolve(event);
 }; 

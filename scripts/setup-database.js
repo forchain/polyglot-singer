@@ -30,7 +30,7 @@ try {
 	console.log('No .env file found, using defaults');
 }
 
-const databaseType = envVars.DATABASE_TYPE || 'sqlite';
+const databaseType = envVars.DATABASE_TYPE || 'postgres';
 
 console.log(`Setting up database for: ${databaseType}`);
 
@@ -64,31 +64,15 @@ function runCommand(command, args, description) {
 async function handleDatabaseMigration() {
 	const drizzleDir = join(__dirname, '..', 'drizzle');
 	
-	if (databaseType === 'sqlite') {
-		// For SQLite, use the SQLite-specific migration file if it exists
-		const sqliteMigrationFile = join(drizzleDir, '0000_harsh_captain_stacy.sqlite.sql');
-		const defaultMigrationFile = join(drizzleDir, '0000_harsh_captain_stacy.sql');
-		
-		if (existsSync(sqliteMigrationFile)) {
-			console.log('📁 Using SQLite-specific migration file');
-			// Backup original file
-			if (existsSync(defaultMigrationFile)) {
-				copyFileSync(defaultMigrationFile, defaultMigrationFile + '.backup');
-			}
-			// Copy SQLite version to default location
-			copyFileSync(sqliteMigrationFile, defaultMigrationFile);
-		}
-	} else if (databaseType === 'postgres') {
-		// For PostgreSQL, ensure we're using the PostgreSQL-compatible file
-		const defaultMigrationFile = join(drizzleDir, '0000_harsh_captain_stacy.sql');
-		const backupFile = defaultMigrationFile + '.backup';
-		
-		// Restore from backup if it exists (was previously using SQLite version)
-		if (existsSync(backupFile)) {
-			console.log('📁 Restoring PostgreSQL migration file from backup');
-			copyFileSync(backupFile, defaultMigrationFile);
-			unlinkSync(backupFile);
-		}
+	// For PostgreSQL/Supabase, ensure we're using the PostgreSQL-compatible file
+	const defaultMigrationFile = join(drizzleDir, '0000_harsh_captain_stacy.sql');
+	const backupFile = defaultMigrationFile + '.backup';
+	
+	// Restore from backup if it exists (was previously using SQLite version)
+	if (existsSync(backupFile)) {
+		console.log('📁 Restoring PostgreSQL migration file from backup');
+		copyFileSync(backupFile, defaultMigrationFile);
+		unlinkSync(backupFile);
 	}
 }
 
@@ -107,17 +91,12 @@ async function main() {
 		console.log('🎉 Database setup completed successfully!');
 		
 		// Show additional setup instructions
-		if (databaseType === 'postgres' || databaseType === 'supabase') {
-			console.log('\n📝 PostgreSQL/Supabase Setup Complete!');
-			console.log('Make sure to:');
-			console.log('1. Set up your Supabase project at https://supabase.com');
-			console.log('2. Copy the connection string from your project settings');
-			console.log('3. Update your .env file with the correct DATABASE_URL');
-			console.log('4. Run the setup script again if needed');
-		} else {
-			console.log('\n📝 SQLite Setup Complete!');
-			console.log('Your local database is ready for development.');
-		}
+		console.log('\n📝 PostgreSQL/Supabase Setup Complete!');
+		console.log('Make sure to:');
+		console.log('1. Set up your Supabase project at https://supabase.com');
+		console.log('2. Copy the connection string from your project settings');
+		console.log('3. Update your .env file with the correct DATABASE_URL');
+		console.log('4. Run the setup script again if needed');
 		
 	} catch (error) {
 		console.error('❌ Database setup failed:', error.message);

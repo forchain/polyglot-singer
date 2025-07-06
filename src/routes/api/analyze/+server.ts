@@ -23,8 +23,20 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// Validate request
 		const validatedData = analyzeRequestSchema.parse(body);
 		
-		// Check if user is authenticated (optional for demo)
+		// Check if user is authenticated
 		const user = locals.user;
+		
+		// 检查用户是否已登录
+		if (!user?.id) {
+			return json(
+				{
+					success: false,
+					error: 'Authentication required',
+					message: '请先登录后再使用此功能'
+				},
+				{ status: 401 }
+			);
+		}
 		
 		// Analyze lyrics using AI service
 		const analysis = await analyzeToLyrics(
@@ -39,11 +51,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		// Generate ID based on database type
 		const id = (databaseType === 'postgres' || databaseType === 'supabase') 
 			? undefined  // PostgreSQL will auto-generate UUID
-			: randomUUID(); // SQLite needs explicit ID
+			: randomUUID(); // PostgreSQL needs explicit ID
 		
 		// 保存到analyzed_lyrics表
 		const insertData: any = {
-			userId: user?.id || 'anonymous',
+			userId: user.id,
 			title: validatedData.title || '',
 			artist: validatedData.artist || '',
 			lyrics: validatedData.lyrics,

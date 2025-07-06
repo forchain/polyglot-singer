@@ -193,7 +193,7 @@ async function main() {
 		
 		logBold('\n📖 配置说明：', 'blue');
 		log('- SESSION_SECRET: 生成随机字符串，至少32字符', 'blue');
-		log('- DATABASE_URL: SQLite使用 "sqlite:dev.db"，Supabase使用连接字符串', 'blue');
+		log('- DATABASE_URL: Supabase使用连接字符串', 'blue');
 		log('- AI_PROVIDER: 选择 AI 提供商并配置对应的 API 密钥', 'blue');
 		
 		logBold('\n🔗 相关文档：', 'cyan');
