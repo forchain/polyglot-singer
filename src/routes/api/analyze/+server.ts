@@ -49,11 +49,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			validatedData.provider
 		);
 		
-		// Generate ID based on database type
-		const id = (databaseType === 'postgres' || databaseType === 'supabase') 
-			? undefined  // PostgreSQL will auto-generate UUID
-			: randomUUID(); // PostgreSQL needs explicit ID
-		
 		// 保存到analyzed_lyrics表
 		const insertData: any = {
 			userId: user.id,
@@ -65,17 +60,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			analysisJson: JSON.stringify(analysis),
 			voice: validatedData.voice || null
 		};
-		
-		if (id) {
+
+		let analysisId: string | undefined;
+
+		if (databaseType === 'postgres' || databaseType === 'supabase') {
+			// Postgres/Supabase 支持 RETURNING
+			const inserted = await db.insert(schema.analyzedLyrics).values(insertData).returning({ id: schema.analyzedLyrics.id });
+			analysisId = inserted[0]?.id;
+		} else {
+			// 其他数据库
+			const id = randomUUID();
 			insertData.id = id;
+			await db.insert(schema.analyzedLyrics).values(insertData);
+			analysisId = id;
 		}
-		
-		await db.insert(schema.analyzedLyrics).values(insertData);
-		
-		// 查询刚插入的id（Postgres可用RETURNING）
-		const inserted = await db.select({ id: schema.analyzedLyrics.id }).from(schema.analyzedLyrics).orderBy(schema.analyzedLyrics.createdAt).limit(1);
-		const analysisId = inserted[0]?.id;
-		
+
 		// Return successful response
 		return json({
 			success: true,
