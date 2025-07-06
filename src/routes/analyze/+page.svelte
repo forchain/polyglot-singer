@@ -8,6 +8,7 @@
 	import type { AIProvider } from '$lib/types/ai-providers.js';
 	import type { PageData } from './$types';
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	
 	export let data: PageData;
 	
@@ -118,7 +119,21 @@
 		}
 	}
 
-	onMount(fetchHistory);
+	onMount(() => {
+		fetchHistory();
+		// 检查URL参数historyId，自动加载分析
+		const url = new URL(window.location.href);
+		const historyId = url.searchParams.get('historyId');
+		if (historyId) {
+			fetch(`/api/analyze/history/${historyId}`)
+				.then(res => res.json())
+				.then(data => {
+					if (data.success) {
+						analysis = data.analysis;
+					}
+				});
+		}
+	});
 </script>
 
 <svelte:head>
