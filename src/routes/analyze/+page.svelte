@@ -58,7 +58,8 @@
 			const result = await response.json();
 			
 			if (result.success && result.analysis && result.analysis.id) {
-				// 分析成功后跳转到分析结果页面
+				// 轮询查找，查到再跳转
+				await waitForAnalysis(result.analysis.id);
 				goto(`/analyze/history/${result.analysis.id}`);
 				return;
 			} else {
@@ -162,6 +163,16 @@
 	$: if (analysis && analysis.sourceLanguage && defaultVoices[analysis.sourceLanguage]) {
 		selectedVoice = defaultVoices[analysis.sourceLanguage];
 		console.log('【voice debug】$reactive设置selectedVoice', selectedVoice, analysis.sourceLanguage, defaultVoices);
+	}
+
+	async function waitForAnalysis(id, maxTries = 10, delay = 300) {
+		for (let i = 0; i < maxTries; i++) {
+			const res = await fetch(`/api/analyze/history/${id}`);
+			const data = await res.json();
+			if (data.success) return true;
+			await new Promise(r => setTimeout(r, delay));
+		}
+		return false;
 	}
 
 </script>
