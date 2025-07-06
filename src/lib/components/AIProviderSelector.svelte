@@ -12,7 +12,6 @@
 </script>
 
 <div class="space-y-2">
-	<label class="form-label">AI Provider</label>
 	<select 
 		value={selectedProvider}
 		on:change={handleProviderChange}

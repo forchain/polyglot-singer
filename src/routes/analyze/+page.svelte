@@ -165,38 +165,33 @@
 				</div>
 				
 				<!-- AI Provider and Language Settings -->
-				<div class="space-y-4">
-					<h3 class="text-lg font-semibold text-gray-900">Analysis Settings</h3>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<!-- AI Provider Selection -->
-						<div>
-							<AIProviderSelector bind:selectedProvider />
-						</div>
-						
-						<!-- Language Settings -->
-						<div class="space-y-4">
-							<h4 class="text-md font-medium text-gray-900">Language Settings</h4>
-							<div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-								<div>
-									<label class="form-label">From</label>
-									<LanguageSelector bind:value={sourceLanguage} />
-								</div>
-								<div class="flex justify-center">
-									<button
-										type="button"
-										on:click={handleLanguageSwap}
-										class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-										title="Swap languages"
-									>
-										<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-										</svg>
-									</button>
-								</div>
-								<div>
-									<label class="form-label">To</label>
-									<LanguageSelector bind:value={targetLanguage} />
-								</div>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<!-- AI Provider 区域 -->
+					<div class="flex flex-col">
+						<label class="form-label mb-2">AI Provider</label>
+						<AIProviderSelector bind:selectedProvider />
+					</div>
+					<!-- Language Settings 区域 -->
+					<div class="flex flex-col">
+						<label class="form-label mb-2">Language Settings</label>
+						<div class="grid grid-cols-5 gap-2 items-end">
+							<div class="col-span-2">
+								<LanguageSelector bind:value={sourceLanguage} />
+							</div>
+							<div class="flex justify-center items-center">
+								<button
+									type="button"
+									on:click={handleLanguageSwap}
+									class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+									title="Swap languages"
+								>
+									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+									</svg>
+								</button>
+							</div>
+							<div class="col-span-2">
+								<LanguageSelector bind:value={targetLanguage} />
 							</div>
 						</div>
 					</div>
