@@ -10,6 +10,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { franc } from 'franc';
 	
 	export let data: PageData;
 	
@@ -173,6 +174,16 @@
 			await new Promise(r => setTimeout(r, delay));
 		}
 		return false;
+	}
+
+	// 监听歌词输入，自动检测语言
+	$: if (lyrics && lyrics.length > 5) {
+		const lang = franc(lyrics);
+		// franc 返回 ISO 639-3 代码，常见映射
+		const map = { 'cmn': 'zh', 'jpn': 'ja', 'eng': 'en', 'fra': 'fr', 'spa': 'es', 'deu': 'de', 'kor': 'ko', 'ita': 'it', 'por': 'pt', 'rus': 'ru' };
+		if (lang && map[lang] && sourceLanguage !== map[lang]) {
+			sourceLanguage = map[lang];
+		}
 	}
 
 </script>
