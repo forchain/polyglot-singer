@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import type { LyricAnalysis, WordAnalysis, LineAnalysis } from '$lib/types/lyric.js';
 import { getAIConfig, validateAIConfig, type AIConfig } from './ai-config.js';
 import { restoreLyricAnalysis } from './restoreLyricAnalysis';
+import { jsonrepair } from 'jsonrepair';
 
 // Get AI configuration
 const aiConfig = getAIConfig();
@@ -47,13 +48,12 @@ export async function analyzeToLyrics(
 			timeout: aiConfig.timeout
 		});
 
-		// uniqueLines 处理
-		const t2 = Date.now();
-		const { uniqueLines, originalLines } = getUniqueLines(lyrics);
+		// 直接用原始歌词行
+		const lines = lyrics.split(/\r?\n/).map(line => line.trim());
 
 		// prompt 生成
 		const t3 = Date.now();
-		const prompt = createSummaryAndLinesPrompt(uniqueLines, sourceLanguage, targetLanguage, title, artist);
+		const prompt = createSummaryAndLinesPrompt(lines, sourceLanguage, targetLanguage, title, artist);
 
 		// 发起大模型请求
 		const t4 = Date.now();
@@ -76,6 +76,8 @@ export async function analyzeToLyrics(
 		// 收到大模型响应
 		const t5 = Date.now();
 		const response = completion.choices[0]?.message?.content;
+		console.log(`[AI] [${Date.now() - startTime}ms] model response received, length=${response?.length}`);
+		console.log('[AI] Model raw response:', response);
 		if (!response) throw new Error('No response from AI');
 
 		// JSON 解析
@@ -84,17 +86,26 @@ export async function analyzeToLyrics(
 		try {
 			parsed = JSON.parse(response);
 		} catch (e) {
-			console.error('[AI] JSON parse error:', e, 'response:', response);
-			throw new Error('Failed to parse AI JSON response');
+			console.error('[AI] JSON parse error (raw):', e, 'response:', response);
+			// 使用 jsonrepair 自动修复
+			try {
+				const repaired = jsonrepair(response);
+				console.log('[AI] Try to fix JSON with jsonrepair:', repaired);
+				parsed = JSON.parse(repaired);
+			} catch (e2) {
+				console.error('[AI] JSON parse error (jsonrepair):', e2, 'response:', response);
+				throw new Error('Failed to parse AI JSON response (jsonrepair)');
+			}
 		}
 
 		if (!parsed.lines || !Array.isArray(parsed.lines)) {
+			console.error('[AI] parsed.lines is invalid:', parsed.lines);
 			throw new Error('AI response missing lines array');
 		}
 
 		// 还原 restoreLyricAnalysis
 		const t7 = Date.now();
-		const restoredLines = restoreLyricAnalysis(originalLines, parsed.lines);
+		const restoredLines = restoreLyricAnalysis(lines, parsed.lines);
 
 		// 总耗时
 		const totalTime = Date.now() - startTime;
@@ -231,7 +242,7 @@ function mapLang(code: string): string {
 }
 
 function createSummaryAndLinesPrompt(
-	uniqueLines: string[],
+	lines: string[],
 	sourceLanguage: string,
 	targetLanguage: string,
 	title?: string,
@@ -254,11 +265,11 @@ function createSummaryAndLinesPrompt(
 	const sourceLang = languageNames[sourceLanguage as keyof typeof languageNames] || sourceLanguage;
 	const targetLang = languageNames[targetLanguage as keyof typeof languageNames] || targetLanguage;
 
-	return `Analyze the following unique ${sourceLang} song lyric lines word by word. Ignore duplicate lines.
+	return `Analyze the following ${sourceLang} song lyric lines word by word.
 
 Instructions:
 - First, output a summary of the song in ${targetLang}, explaining the overall meaning, theme, and emotional context.
-- Then, for each unique line, output:
+- Then, for each line, output:
   [
     "lineTranslation",
     [
@@ -296,12 +307,19 @@ Example output:
         ["foo", "/fuː/", "示例"],
         ["bar", "/bɑːr/", "条"]
       ]
+    ],
+    [
+      "你好，世界",
+      [
+        ["hello", "/həˈloʊ/", "你好"],
+        ["world", "/wɜːrld/", "世界"]
+      ]
     ]
   ]
 }
 
-Unique lyric lines to analyze:
-${uniqueLines.join('\n')}
+Lyric lines to analyze:
+${lines.join('\n')}
 
 IMPORTANT: Return ONLY the JSON object, no extra text or explanation.`;
 } 

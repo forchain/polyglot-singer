@@ -2,20 +2,15 @@ export function restoreLyricAnalysis(
   originalLines: string[],
   compressedLines: any[]
 ) {
-  // uniqueLines 顺序与 compressedLines 一致
-  const uniqueLines: string[] = [];
-  const lineToUniqueIdx: Record<string, number> = {};
-  originalLines.forEach(line => {
-    if (!(line in lineToUniqueIdx)) {
-      lineToUniqueIdx[line] = uniqueLines.length;
-      uniqueLines.push(line);
-    }
-  });
-
-  // 还原
+  // 直接一一对应，不查重
   return originalLines.map((line, idx) => {
-    const uniqueIdx = lineToUniqueIdx[line];
-    const [lineTranslation, wordsArr] = compressedLines[uniqueIdx];
+    const arr = compressedLines[idx];
+    if (!Array.isArray(arr) || arr.length < 2) {
+      console.error('[restoreLyricAnalysis] Invalid compressed line:', arr, 'at idx:', idx);
+      throw new Error('Invalid compressed line format');
+    }
+    const [lineTranslation, wordsArrRaw] = arr;
+    const wordsArr = Array.isArray(wordsArrRaw) ? wordsArrRaw : [];
     return {
       lineNumber: idx + 1,
       originalLine: line,
