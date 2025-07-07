@@ -30,6 +30,8 @@
 	let selectedVoice = '';
 	let defaultVoices: Record<string, string> = {};
 	let isLoadingAnalysis = false;
+	let lastLyricsForDetect = '';
+	let autoDetectedLanguage = '';
 	
 	async function handleAnalyze() {
 		if (!lyrics.trim()) {
@@ -176,14 +178,15 @@
 		return false;
 	}
 
-	// 监听歌词输入，自动检测语言
-	$: if (lyrics && lyrics.length > 5) {
+	// 监听歌词输入，只有内容变化时才自动检测语言
+	$: if (lyrics && lyrics.length > 5 && lyrics !== lastLyricsForDetect) {
 		const lang = franc(lyrics);
-		// franc 返回 ISO 639-3 代码，常见映射
-		const map = { 'cmn': 'zh', 'jpn': 'ja', 'eng': 'en', 'fra': 'fr', 'spa': 'es', 'deu': 'de', 'kor': 'ko', 'ita': 'it', 'por': 'pt', 'rus': 'ru' };
-		if (lang && map[lang] && sourceLanguage !== map[lang]) {
+		const map: Record<string, string> = { 'cmn': 'zh', 'jpn': 'ja', 'eng': 'en', 'fra': 'fr', 'spa': 'es', 'deu': 'de', 'kor': 'ko', 'ita': 'it', 'por': 'pt', 'rus': 'ru' };
+		if (lang && map[lang]) {
+			autoDetectedLanguage = map[lang];
 			sourceLanguage = map[lang];
 		}
+		lastLyricsForDetect = lyrics;
 	}
 
 </script>
