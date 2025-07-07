@@ -170,10 +170,12 @@
 			<div class="md:hidden py-4 border-t border-gray-200">
 				<div class="space-y-3">
 					<a href="/" class="block text-gray-600 hover:text-gray-900 font-medium">Home</a>
-					
 					{#if user}
 						<a href="/analyze" class="block text-gray-600 hover:text-gray-900 font-medium">Analyze</a>
 						<a href="/library" class="block text-gray-600 hover:text-gray-900 font-medium">My Library</a>
+					{/if}
+					<a href="/demo" class="block text-gray-600 hover:text-gray-900 font-medium">Gallery</a>
+					{#if user}
 						<a href="/profile" class="block text-gray-600 hover:text-gray-900 font-medium">Profile</a>
 						<a href="/settings" class="block text-gray-600 hover:text-gray-900 font-medium">Settings</a>
 						<button 
@@ -183,7 +185,6 @@
 							Sign Out
 						</button>
 					{:else}
-						<a href="/demo" class="block text-gray-600 hover:text-gray-900 font-medium">Demo</a>
 						<a href="/auth" class="block text-gray-600 hover:text-gray-900 font-medium">Sign In</a>
 						<a href="/auth" class="block bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg inline-block">Get Started</a>
 					{/if}
