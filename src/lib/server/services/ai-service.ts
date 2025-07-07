@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import type { LyricAnalysis, WordAnalysis, LineAnalysis } from '$lib/types/lyric.js';
 import { getAIConfig, validateAIConfig, type AIConfig } from './ai-config.js';
+import { restoreLyricAnalysis } from './restoreLyricAnalysis';
 
 // Get AI configuration
 const aiConfig = getAIConfig();
@@ -31,58 +32,32 @@ export async function analyzeToLyrics(
 ): Promise<LyricAnalysis> {
 	const startTime = Date.now();
 	let lastTime = startTime;
-	console.log('[AI] analyzeToLyrics: start', { lyricsLength: lyrics.length, sourceLanguage, targetLanguage, title, artist, provider });
-
 	try {
-		console.log(`[AI] [${Date.now() - startTime}ms] Getting AI config...`);
-		const aiConfig = getAIConfig(provider);
-		console.log(`[AI] [${Date.now() - startTime}ms] Got AI config:`, aiConfig);
+		console.log(`[AI] [0ms] analyzeToLyrics: start, lyricsLength=${lyrics.length}, sourceLanguage=${sourceLanguage}, targetLanguage=${targetLanguage}, title=${title}, artist=${artist}, provider=${provider}`);
 
-		console.log(`[AI] [${Date.now() - startTime}ms] Initializing OpenAI client...`);
+		// getAIConfig
+		const t0 = Date.now();
+		const aiConfig = getAIConfig(provider);
+
+		// OpenAI client 初始化
+		const t1 = Date.now();
 		const client = new OpenAI({
 			apiKey: aiConfig.apiKey,
 			baseURL: aiConfig.baseURL,
 			timeout: aiConfig.timeout
 		});
-		console.log(`[AI] [${Date.now() - startTime}ms] OpenAI client initialized.`);
 
-		// 第一步：生成整体翻译和总结
-		console.log(`[AI] [${Date.now() - startTime}ms] Step 1: Creating overall translation and summary...`);
-		const overallPrompt = createOverallAnalysisPrompt(lyrics, sourceLanguage, targetLanguage, title, artist);
-		console.log(`[AI] [${Date.now() - startTime}ms] Overall prompt created. Length: ${overallPrompt.length}`);
+		// uniqueLines 处理
+		const t2 = Date.now();
+		const { uniqueLines, originalLines } = getUniqueLines(lyrics);
 
-		console.log(`[AI] [${Date.now() - startTime}ms] Sending overall analysis request...`);
-		const overallCompletion = await client.chat.completions.create({
-			model: aiConfig.model,
-			messages: [
-				{
-					role: 'system',
-					content: 'You are a professional language teacher and music analyst. First provide an overall translation and summary of the song lyrics to help understand the context and meaning.'
-				},
-				{
-					role: 'user',
-					content: overallPrompt
-				}
-			],
-			temperature: aiConfig.temperature,
-			max_tokens: aiConfig.maxTokens
-		});
+		// prompt 生成
+		const t3 = Date.now();
+		const prompt = createSummaryAndLinesPrompt(uniqueLines, sourceLanguage, targetLanguage, title, artist);
 
-		const overallResponse = overallCompletion.choices[0]?.message?.content;
-		if (!overallResponse) {
-			throw new Error('No response from OpenAI API for overall analysis');
-		}
-
-		console.log(`[AI] [${Date.now() - startTime}ms] Parsing overall analysis...`);
-		const overallAnalysis = parseOverallAnalysis(overallResponse);
-
-		// 第二步：逐行分析
-		console.log(`[AI] [${Date.now() - startTime}ms] Step 2: Creating detailed line-by-line analysis...`);
-		const detailedPrompt = createDetailedAnalysisPrompt(lyrics, sourceLanguage, targetLanguage, overallAnalysis);
-		console.log(`[AI] [${Date.now() - startTime}ms] Detailed prompt created. Length: ${detailedPrompt.length}`);
-
-		console.log(`[AI] [${Date.now() - startTime}ms] Sending detailed analysis request...`);
-		const detailedCompletion = await client.chat.completions.create({
+		// 发起大模型请求
+		const t4 = Date.now();
+		const completion = await client.chat.completions.create({
 			model: aiConfig.model,
 			messages: [
 				{
@@ -91,103 +66,59 @@ export async function analyzeToLyrics(
 				},
 				{
 					role: 'user',
-					content: detailedPrompt
+					content: prompt
 				}
 			],
 			temperature: aiConfig.temperature,
 			max_tokens: aiConfig.maxTokens
 		});
 
-		const detailedResponse = detailedCompletion.choices[0]?.message?.content;
-		if (!detailedResponse) {
-			throw new Error('No response from OpenAI API for detailed analysis');
+		// 收到大模型响应
+		const t5 = Date.now();
+		const response = completion.choices[0]?.message?.content;
+		if (!response) throw new Error('No response from AI');
+
+		// JSON 解析
+		const t6 = Date.now();
+		let parsed;
+		try {
+			parsed = JSON.parse(response);
+		} catch (e) {
+			console.error('[AI] JSON parse error:', e, 'response:', response);
+			throw new Error('Failed to parse AI JSON response');
 		}
 
-		console.log(`[AI] [${Date.now() - startTime}ms] Parsing detailed analysis...`);
-		const detailedAnalysis = parseDetailedAnalysis(detailedResponse, sourceLanguage, targetLanguage);
+		if (!parsed.lines || !Array.isArray(parsed.lines)) {
+			throw new Error('AI response missing lines array');
+		}
 
-		// 合并结果
-		const analysis: LyricAnalysis = {
-			...detailedAnalysis,
-			summary: overallAnalysis.summary,
-			overallTranslation: overallAnalysis.overallTranslation,
+		// 还原 restoreLyricAnalysis
+		const t7 = Date.now();
+		const restoredLines = restoreLyricAnalysis(originalLines, parsed.lines);
+
+		// 总耗时
+		const totalTime = Date.now() - startTime;
+		console.log(`[AI] [${totalTime}ms] analyzeToLyrics finished, total time: ${totalTime}ms`);
+
+		return {
+			lines: restoredLines,
+			summary: parsed.summary,
 			title,
 			artist,
+			sourceLanguage,
+			targetLanguage,
 			metadata: {
-				processingTime: Date.now() - startTime,
+				processingTime: totalTime,
 				model: `${aiConfig.provider}:${aiConfig.model}`,
 				timestamp: new Date()
 			}
 		};
-
-		console.log(`[AI] [${Date.now() - startTime}ms] Returning combined analysis result.`);
-		return analysis;
-
 	} catch (error) {
-		console.error(`[AI] [${Date.now() - startTime}ms] AI service error:`, error);
+		console.error('[AI] analyzeToLyrics error:', error);
 		throw new Error('Failed to analyze lyrics: ' + (error as Error).message);
 	}
 }
 
-/**
- * Create analysis prompt for OpenAI
- */
-function createAnalysisPrompt(
-	lyrics: string,
-	sourceLanguage: string,
-	targetLanguage: string
-): string {
-	const languageNames = {
-		en: 'English',
-		zh: 'Chinese (Mandarin)',
-		es: 'Spanish',
-		fr: 'French',
-		de: 'German',
-		ja: 'Japanese',
-		ko: 'Korean',
-		it: 'Italian',
-		pt: 'Portuguese',
-		ru: 'Russian'
-	};
-
-	const sourceLang = languageNames[sourceLanguage as keyof typeof languageNames] || sourceLanguage;
-	const targetLang = languageNames[targetLanguage as keyof typeof languageNames] || targetLanguage;
-
-	return `Analyze the following ${sourceLang} song lyrics word by word. For each word, provide:
-1. The original word
-2. Phonetic transcription (IPA format when possible)
-3. Translation to ${targetLang} (contextual meaning in the song, not dictionary definition)
-4. Brief context explanation if needed
-
-Format your response as JSON with this exact structure:
-{
-  "lines": [
-    {
-      "originalLine": "exact line text",
-      "lineNumber": 1,
-      "words": [
-        {
-          "word": "original_word",
-          "phonetic": "/phonetic_transcription/",
-          "translation": "contextual_translation",
-          "context": "brief_explanation_if_needed",
-          "position": {"line": 1, "index": 0}
-        }
-      ]
-    }
-  ]
-}
-
-Song lyrics to analyze:
-${lyrics}
-
-Important notes:
-- Maintain exact spacing and punctuation
-- For ${targetLang === 'Chinese (Mandarin)' ? 'Chinese, include pinyin in phonetic field' : 'phonetic transcriptions, use IPA when possible'}
-- Focus on how words are used in this song context
-- If a word has multiple meanings, choose the one that fits the song
-- Handle contractions as separate words (e.g., "don't" = "do" + "not")`;
-}
 
 /**
  * Parse AI response into structured format
@@ -269,11 +200,38 @@ export async function detectLanguage(text: string): Promise<string> {
 	}
 }
 
-/**
- * Create overall analysis prompt for generating summary and translation
- */
-function createOverallAnalysisPrompt(
-	lyrics: string,
+
+function getUniqueLines(lyrics: string): { uniqueLines: string[], originalLines: string[] } {
+	const originalLines = lyrics.split(/\r?\n/).map(line => line.trim());
+	const uniqueLines: string[] = [];
+	const seen = new Set<string>();
+	for (const line of originalLines) {
+		if (!seen.has(line)) {
+			uniqueLines.push(line);
+			seen.add(line);
+		}
+	}
+	return { uniqueLines, originalLines };
+}
+
+
+function mapLang(code: string): string {
+	if (code === 'zh') return 'zh-CN';
+	if (code === 'yue') return 'zh-HK'; // 粤语
+	if (code === 'en') return 'en-US';
+	if (code === 'fr') return 'fr-FR';
+	if (code === 'es') return 'es-ES';
+	if (code === 'de') return 'de-DE';
+	if (code === 'ja') return 'ja-JP';
+	if (code === 'ko') return 'ko-KR';
+	if (code === 'it') return 'it-IT';
+	if (code === 'pt') return 'pt-PT';
+	if (code === 'ru') return 'ru-RU';
+	return code;
+}
+
+function createSummaryAndLinesPrompt(
+	uniqueLines: string[],
 	sourceLanguage: string,
 	targetLanguage: string,
 	title?: string,
@@ -296,192 +254,54 @@ function createOverallAnalysisPrompt(
 	const sourceLang = languageNames[sourceLanguage as keyof typeof languageNames] || sourceLanguage;
 	const targetLang = languageNames[targetLanguage as keyof typeof languageNames] || targetLanguage;
 
-	const songInfo = title && artist ? `Song: "${title}" by ${artist}` : '';
-
-	return `Please provide an overall analysis of the following ${sourceLang} song lyrics.
-
-${songInfo}
-
-Song lyrics:
-${lyrics}
+	return `Analyze the following unique ${sourceLang} song lyric lines word by word. Ignore duplicate lines.
 
 Instructions:
-1. Output the complete translation of the entire lyrics in ${targetLang}.
-2. Output a comprehensive summary in ${targetLang}, explaining the overall meaning, theme, and emotional context of the song.
-
-Format your response as JSON with this exact structure:
+- First, output a summary of the song in ${targetLang}, explaining the overall meaning, theme, and emotional context.
+- Then, for each unique line, output:
+  [
+    "lineTranslation",
+    [
+      ["word1", "phonetic1", "translation1"],
+      ...
+    ]
+  ]
+- Return a JSON object with this exact structure:
 {
-  "overallTranslation": "complete translation of the entire lyrics in ${targetLang}",
-  "summary": "comprehensive summary in ${targetLang} explaining the meaning, theme, and emotional context"
+  "summary": "xxx",
+  "lines": [ ... ]
 }
+- Do NOT include any field names in lines, only use arrays.
+- All translations and phonetics must be in ${targetLang}.
 
-Important notes:
-- The overall translation should maintain the poetic and emotional quality of the original, and must be in ${targetLang}.
-- The summary must be written in ${targetLang}.
-- Focus on the overall message and feeling of the song, not individual words.`;
-}
+Example input:
+hello world
+foo bar
+hello world
 
-/**
- * Parse overall analysis response
- */
-function parseOverallAnalysis(response: string): { overallTranslation: string; summary: string } {
-	try {
-		// Extract JSON from response
-		const jsonMatch = response.match(/\{[\s\S]*\}/);
-		if (!jsonMatch) {
-			throw new Error('No valid JSON found in overall analysis response');
-		}
-
-		const parsed = JSON.parse(jsonMatch[0]);
-		
-		return {
-			overallTranslation: parsed.overallTranslation || '',
-			summary: parsed.summary || ''
-		};
-
-	} catch (error) {
-		console.error('Failed to parse overall analysis response:', error);
-		throw new Error('Failed to parse overall analysis response');
-	}
-}
-
-/**
- * Create detailed analysis prompt for word-by-word analysis
- */
-function createDetailedAnalysisPrompt(
-	lyrics: string,
-	sourceLanguage: string,
-	targetLanguage: string,
-	overallAnalysis: { overallTranslation: string; summary: string }
-): string {
-	const languageNames = {
-		en: 'English',
-		zh: 'Chinese (Mandarin)',
-		yue: 'Cantonese (Yue Chinese)',
-		es: 'Spanish',
-		fr: 'French',
-		de: 'German',
-		ja: 'Japanese',
-		ko: 'Korean',
-		it: 'Italian',
-		pt: 'Portuguese',
-		ru: 'Russian'
-	};
-
-	const sourceLang = languageNames[sourceLanguage as keyof typeof languageNames] || sourceLanguage;
-	const targetLang = languageNames[targetLanguage as keyof typeof languageNames] || targetLanguage;
-
-	return `Now analyze the following ${sourceLang} song lyrics word by word.
-
-Context from overall analysis:
-- Overall meaning: ${overallAnalysis.summary}
-- Overall translation: ${overallAnalysis.overallTranslation}
-
-Instructions:
-- For each word, provide:
-  1. The original word
-  2. Phonetic transcription (IPA format when possible)
-  3. Translation to ${targetLang} (contextual meaning in the song, not dictionary definition)
-  4. Brief context explanation if needed
-- For each line, also provide:
-  5. A complete translation of the entire line in ${targetLang}
-
-Format your response as JSON with this exact structure:
+Example output:
 {
+  "summary": "这是一首关于问候的歌曲",
   "lines": [
-    {
-      "originalLine": "exact line text",
-      "lineNumber": 1,
-      "lineTranslation": "complete translation of this line in ${targetLang}",
-      "words": [
-        {
-          "word": "original_word",
-          "phonetic": "/phonetic_transcription/",
-          "translation": "contextual_translation in ${targetLang}",
-          "context": "brief_explanation_if_needed in ${targetLang}",
-          "position": {"line": 1, "index": 0}
-        }
+    [
+      "你好，世界",
+      [
+        ["hello", "/həˈloʊ/", "你好"],
+        ["world", "/wɜːrld/", "世界"]
       ]
-    }
+    ],
+    [
+      "示例翻译",
+      [
+        ["foo", "/fuː/", "示例"],
+        ["bar", "/bɑːr/", "条"]
+      ]
+    ]
   ]
 }
 
-Song lyrics to analyze:
-${lyrics}
+Unique lyric lines to analyze:
+${uniqueLines.join('\n')}
 
-Important notes:
-- All translations and explanations must be in ${targetLang}.
-- Use the overall context to ensure accurate word translations.
-- Maintain exact spacing and punctuation.
-- For ${targetLang === 'Chinese (Mandarin)' ? 'Chinese, include pinyin in phonetic field' : targetLang === 'Cantonese (Yue Chinese)' ? 'Cantonese, include jyutping in phonetic field' : 'phonetic transcriptions, use IPA when possible'}.
-- Focus on how words are used in this song context.
-- If a word has multiple meanings, choose the one that fits the song.
-- Handle contractions as separate words (e.g., "don't" = "do" + "not").
-- Each lineTranslation should be a natural, fluent translation of the entire line in ${targetLang}.`;
-}
-
-/**
- * Parse detailed analysis response
- */
-function parseDetailedAnalysis(
-	response: string,
-	sourceLanguage: string,
-	targetLanguage: string
-): LyricAnalysis {
-	try {
-		// Extract JSON from response (in case there's extra text)
-		const jsonMatch = response.match(/\{[\s\S]*\}/);
-		if (!jsonMatch) {
-			throw new Error('No valid JSON found in detailed analysis response');
-		}
-
-		const parsed = JSON.parse(jsonMatch[0]);
-		
-		// Validate and normalize the structure
-		if (!parsed.lines || !Array.isArray(parsed.lines)) {
-			throw new Error('Invalid response structure: missing lines array');
-		}
-
-		const lines: LineAnalysis[] = parsed.lines.map((line: any, index: number) => ({
-			originalLine: line.originalLine || '',
-			lineNumber: line.lineNumber || index + 1,
-			lineTranslation: line.lineTranslation || '',
-			words: (line.words || []).map((word: any, wordIndex: number) => ({
-				word: word.word || '',
-				phonetic: word.phonetic || '',
-				translation: word.translation || '',
-				context: word.context || '',
-				position: {
-					line: line.lineNumber || index + 1,
-					index: wordIndex
-				},
-				confidence: word.confidence || 0.9
-			}))
-		}));
-
-		return {
-			sourceLanguage,
-			targetLanguage,
-			lines
-		};
-
-	} catch (error) {
-		console.error('Failed to parse detailed analysis response:', error);
-		throw new Error('Failed to parse detailed analysis response');
-	}
-}
-
-function mapLang(code: string): string {
-	if (code === 'zh') return 'zh-CN';
-	if (code === 'yue') return 'zh-HK'; // 粤语
-	if (code === 'en') return 'en-US';
-	if (code === 'fr') return 'fr-FR';
-	if (code === 'es') return 'es-ES';
-	if (code === 'de') return 'de-DE';
-	if (code === 'ja') return 'ja-JP';
-	if (code === 'ko') return 'ko-KR';
-	if (code === 'it') return 'it-IT';
-	if (code === 'pt') return 'pt-PT';
-	if (code === 'ru') return 'ru-RU';
-	return code;
+IMPORTANT: Return ONLY the JSON object, no extra text or explanation.`;
 } 
