@@ -4,10 +4,22 @@ import LyricDisplay from '$lib/components/LyricDisplay.svelte';
 import type { LyricAnalysis } from '$lib/types/lyric';
 import { onMount } from 'svelte';
 
-export let data: { analysis: LyricAnalysis | null, selectedVoice: string };
+export let data: { analysis: LyricAnalysis | null, selectedVoice: string, isPublic: boolean };
 let analysis: LyricAnalysis | null = data.analysis;
 let selectedVoice: string = data.selectedVoice;
+let isPublic: boolean = data.isPublic;
+let updating = false;
 
+async function togglePublic() {
+	updating = true;
+	await fetch(`/api/analyze/history/${analysis?.id}/public`, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ isPublic: !isPublic })
+	});
+	isPublic = !isPublic;
+	updating = false;
+}
 </script>
 
 <svelte:head>
@@ -21,6 +33,18 @@ let selectedVoice: string = data.selectedVoice;
 			<p class="text-gray-500 text-lg">正在加载歌词分析…</p>
 		</div>
 	{:else}
+		<div class="flex items-center gap-4 mb-4">
+			<button
+				class="px-3 py-1 rounded text-xs border {isPublic ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100 text-gray-500 border-gray-300'}"
+				on:click={togglePublic}
+				disabled={updating}
+			>
+				{isPublic ? '已公开' : '未公开'}
+			</button>
+			{#if updating}
+				<span class="text-xs text-gray-400">正在更新...</span>
+			{/if}
+		</div>
 		<LyricDisplay {analysis} bind:selectedVoice />
 	{/if}
 </div>

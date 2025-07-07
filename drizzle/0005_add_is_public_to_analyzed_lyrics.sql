@@ -1,0 +1,1 @@
+ALTER TABLE analyzed_lyrics ADD COLUMN is_public boolean DEFAULT false; 

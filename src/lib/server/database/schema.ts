@@ -79,6 +79,7 @@ export const analyzedLyrics = pgTable('analyzed_lyrics', {
 	sourceLanguage: text('source_language').notNull(),
 	targetLanguage: text('target_language').notNull(),
 	analysisJson: text('analysis_json').notNull(), // JSON string
+	isPublic: boolean('is_public').default(false),
 	createdAt: timestamp('created_at').defaultNow()
 });
 

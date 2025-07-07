@@ -23,6 +23,7 @@ export const load: PageLoad = async ({ params, fetch, parent }) => {
   } catch {}
   return {
     analysis: data.analysis,
-    selectedVoice
+    selectedVoice,
+    isPublic: data.isPublic
   };
 }; 

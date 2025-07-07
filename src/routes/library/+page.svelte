@@ -56,7 +56,22 @@
                 <div class="font-medium">{item.title || '未命名'}</div>
                 <div class="text-xs text-gray-500">{item.createdAt?.slice(0, 10) || ''}</div>
               </div>
-              <a href={`/analyze/history/${item.id}`} class="text-blue-600 hover:underline">查看分析</a>
+              <div class="flex items-center gap-3">
+                <a href={`/analyze/history/${item.id}`} class="text-blue-600 hover:underline">查看分析</a>
+                <button
+                  class="px-2 py-1 rounded text-xs border ml-2 {item.isPublic ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100 text-gray-500 border-gray-300'}"
+                  on:click={async () => {
+                    await fetch(`/api/analyze/history/${item.id}/public`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ isPublic: !item.isPublic })
+                    });
+                    fetchHistory();
+                  }}
+                >
+                  {item.isPublic ? '已公开' : '未公开'}
+                </button>
+              </div>
             </li>
           {/each}
         </ul>

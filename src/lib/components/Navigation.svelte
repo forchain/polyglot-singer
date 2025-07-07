@@ -93,7 +93,7 @@
 					class:text-primary-600={currentPath === '/demo'}
 					class:font-semibold={currentPath === '/demo'}
 				>
-					Demo
+					Gallery
 				</a>
 			</div>
 
