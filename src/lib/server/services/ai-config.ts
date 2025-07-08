@@ -7,6 +7,11 @@ import {
 	DEEPSEEK_MODEL_DETECTION
 } from '$env/static/private';
 
+// Doubao environment variables (optional for development)
+const DOUBAO_API_KEY = process.env.DOUBAO_API_KEY || '';
+const DOUBAO_MODEL = process.env.DOUBAO_MODEL || 'doubao-lite-32k-240828';
+const DOUBAO_MODEL_DETECTION = process.env.DOUBAO_MODEL_DETECTION || 'doubao-lite-32k-240828';
+
 export interface AIConfig {
 	provider: AIProvider;
 	apiKey: string;
@@ -20,11 +25,11 @@ export interface AIConfig {
 
 // Default configuration
 export const defaultConfig: AIConfig = {
-	provider: 'deepseek',
-	apiKey: DEEPSEEK_API_KEY || '',
-	baseURL: 'https://api.deepseek.com/v1',
-	model: DEEPSEEK_MODEL || 'deepseek-chat',
-	detectionModel: DEEPSEEK_MODEL_DETECTION || 'deepseek-chat',
+	provider: 'doubao',
+	apiKey: DOUBAO_API_KEY || '',
+	baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+	model: DOUBAO_MODEL || 'doubao-lite-32k-240828',
+	detectionModel: DOUBAO_MODEL_DETECTION || 'doubao-lite-32k-240828',
 	timeout: 30000,
 	maxTokens: 4000,
 	temperature: 0.3
@@ -32,6 +37,12 @@ export const defaultConfig: AIConfig = {
 
 // Provider-specific configurations
 export const providerConfigs: Record<string, Partial<AIConfig>> = {
+	doubao: {
+		provider: 'doubao',
+		baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+		model: 'doubao-lite-32k-240828',
+		detectionModel: 'doubao-lite-32k-240828'
+	},
 	deepseek: {
 		provider: 'deepseek',
 		baseURL: 'https://api.deepseek.com/v1',
@@ -70,10 +81,19 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 
 // Get configuration for a specific provider
 export function getAIConfig(provider?: string): AIConfig {
-	const providerName = provider || 'deepseek';
-	const baseConfig = providerConfigs[providerName] || providerConfigs.deepseek;
+	const providerName = provider || 'doubao';
+	const baseConfig = providerConfigs[providerName] || providerConfigs.doubao;
 
-	if (providerName === 'deepseek') {
+	if (providerName === 'doubao') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			apiKey: DOUBAO_API_KEY || '',
+			baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+			model: DOUBAO_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: DOUBAO_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+		};
+	} else if (providerName === 'deepseek') {
 		return {
 			...defaultConfig,
 			...baseConfig,

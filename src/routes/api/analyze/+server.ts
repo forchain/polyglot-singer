@@ -10,7 +10,7 @@ const analyzeRequestSchema = z.object({
 	lyrics: z.string().min(1, 'Lyrics are required').max(10000, 'Lyrics too long'),
 	sourceLanguage: z.string().optional().default('en'),
 	targetLanguage: z.string().optional().default('zh'),
-	provider: z.string().optional().default('deepseek'),
+	provider: z.string().optional().default('doubao'),
 	title: z.string().optional(),
 	artist: z.string().optional(),
 	voice: z.string().optional()

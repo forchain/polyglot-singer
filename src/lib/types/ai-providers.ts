@@ -1,7 +1,8 @@
 // Client-side AI provider types and configurations
-export type AIProvider = 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom';
+export type AIProvider = 'doubao' | 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom';
 
 export const providerDisplayNames: Record<AIProvider, string> = {
+	doubao: 'Doubao (豆包)',
 	deepseek: 'DeepSeek (DeepSeek-V3)',
 	openai: 'OpenAI (GPT-4o-mini, GPT-4.1-nano)',
 	anthropic: 'Anthropic (Claude)',
@@ -10,7 +11,7 @@ export const providerDisplayNames: Record<AIProvider, string> = {
 	custom: 'Custom Provider'
 };
 
-export const supportedProviders: AIProvider[] = ['deepseek', 'openai', 'anthropic', 'google', 'local', 'custom'];
+export const supportedProviders: AIProvider[] = ['doubao', 'deepseek', 'openai', 'anthropic', 'google', 'local', 'custom'];
 
 export interface ProviderInfo {
 	name: string;
@@ -20,6 +21,12 @@ export interface ProviderInfo {
 }
 
 export const providerInfo: Record<AIProvider, ProviderInfo> = {
+	doubao: {
+		name: 'Doubao (豆包)',
+		description: 'Doubao Lite model from ByteDance',
+		requiresApiKey: true,
+		configUrl: 'https://ark.cn-beijing.volces.com/'
+	},
 	deepseek: {
 		name: 'DeepSeek',
 		description: 'DeepSeek-V3 model from DeepSeek AI',

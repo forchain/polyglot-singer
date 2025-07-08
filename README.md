@@ -8,7 +8,7 @@ A multilingual song lyrics analysis and pronunciation learning application built
 - 🎵 **Lyric Analysis**: AI-powered word-by-word translation and phonetic transcription
 - 🌍 **Multi-language Support**: English, Chinese (Mandarin), Cantonese, Japanese, Korean, Spanish, French, German, Italian, Portuguese, Russian
 - 🔊 **Text-to-Speech**: Click to hear pronunciation of individual words or entire lines
-- 🤖 **Multiple AI Providers**: DeepSeek (default), OpenAI, Anthropic Claude, Google Gemini, Local (Ollama), and custom providers
+- 🤖 **Multiple AI Providers**: Doubao (default), DeepSeek, OpenAI, Anthropic Claude, Google Gemini, Local (Ollama), and custom providers
 - 📱 **Responsive Design**: Works on desktop and mobile devices
 - 💾 **History Tracking**: Save and revisit your analyzed lyrics
 - 🎯 **Two-step Analysis**: Overall translation + detailed word-by-word breakdown
@@ -75,9 +75,9 @@ DATABASE_URL=sqlite:dev.db
 # DATABASE_TYPE=postgres
 # DATABASE_URL=postgresql://user:password@host:port/database
 
-# AI Provider (DeepSeek is default)
-AI_PROVIDER=deepseek
-DEEPSEEK_API_KEY=your_api_key_here
+# AI Provider (Doubao is default)
+AI_PROVIDER=doubao
+DOUBAO_API_KEY=your_doubao_api_key_here
 
 # Security
 SESSION_SECRET=your_random_32_character_secret
@@ -142,7 +142,8 @@ See [docs/SCRIPTS_USAGE.md](./docs/SCRIPTS_USAGE.md) for detailed script documen
 
 The application supports multiple AI providers:
 
-- **DeepSeek** (default): Cost-effective and high-quality
+- **Doubao** (default): ByteDance's high-quality language model
+- **DeepSeek**: Cost-effective and high-quality
 - **OpenAI**: GPT-4 models for premium quality
 - **Anthropic Claude**: Excellent for nuanced translations
 - **Google Gemini**: Fast and reliable
@@ -158,8 +159,8 @@ The application supports multiple AI providers:
 2. **Configure environment variables** in Vercel:
    - `DATABASE_TYPE=postgres`
    - `DATABASE_URL=your_supabase_connection_string`
-   - `AI_PROVIDER=deepseek` (or your preferred provider)
-   - `DEEPSEEK_API_KEY=your_api_key`
+   - `AI_PROVIDER=doubao` (or your preferred provider)
+   - `DOUBAO_API_KEY=your_api_key`
    - `SESSION_SECRET=random_32_character_string`
 
 3. **Deploy**:

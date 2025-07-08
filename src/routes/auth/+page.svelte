@@ -39,7 +39,7 @@
   $: if (message === '登录成功' && !error) {
     // 等待刷新
   } else if ($page && $page.data && $page.data.user === null && message === '') {
-    error = '用户信息同步失败，请联系管理员';
+    error = '请重新登录';
   }
 </script>
 
