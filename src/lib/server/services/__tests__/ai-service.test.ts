@@ -156,10 +156,16 @@ describe('AI Service', () => {
 });
 
 describe('AI Config', () => {
-	it('should get DeepSeek config by default', () => {
+	it('should get Doubao config by default', () => {
 		const config = getAIConfig();
-		expect(config.provider).toBe('deepseek');
-		expect(config.baseURL).toBe('https://api.deepseek.com/v1');
+		expect(config.provider).toBe('doubao');
+		expect(config.baseURL).toBe('https://ark.cn-beijing.volces.com/api/v3');
+	});
+
+	it('should get Doubao config explicitly', () => {
+		const config = getAIConfig('doubao');
+		expect(config.provider).toBe('doubao');
+		expect(config.baseURL).toBe('https://ark.cn-beijing.volces.com/api/v3');
 	});
 
 	it('should get DeepSeek config explicitly', () => {

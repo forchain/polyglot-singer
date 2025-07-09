@@ -70,6 +70,9 @@ export async function analyzeToLyrics(
 				}
 			],
 			temperature: aiConfig.temperature,
+			thinking: {
+				"type": "disabled",
+			},
 			max_tokens: aiConfig.maxTokens
 		});
 
@@ -89,7 +92,7 @@ export async function analyzeToLyrics(
 			console.error('[AI] JSON parse error (raw):', e, 'response:', response);
 			// 使用 jsonrepair 自动修复
 			try {
-				const repaired = jsonrepair(response);
+				const repaired = jsonrepair(response.replace(/""/g, '"'));
 				console.log('[AI] Try to fix JSON with jsonrepair:', repaired);
 				parsed = JSON.parse(repaired);
 			} catch (e2) {
@@ -112,7 +115,15 @@ export async function analyzeToLyrics(
 		console.log(`[AI] [${totalTime}ms] analyzeToLyrics finished, total time: ${totalTime}ms`);
 
 		return {
-			lines: restoredLines,
+			lines: restoredLines.map(line => ({
+				...line,
+				words: line.words.map((word, idx) => ({
+					context: '', // or a better default if you have one
+					position: { line: line.lineNumber, index: idx },
+					confidence: 0.9,
+					...word
+				}))
+			})),
 			summary: parsed.summary,
 			title,
 			artist,

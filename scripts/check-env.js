@@ -75,7 +75,7 @@ function getComments(filePath) {
 	return comments;
 }
 
-// 合并环境变量
+// 合并环境变量 - 只添加缺失的变量，不覆盖现有的
 function mergeEnvFiles(examplePath, envPath) {
 	const exampleVars = parseEnvFile(examplePath);
 	const envVars = parseEnvFile(envPath);
@@ -85,13 +85,13 @@ function mergeEnvFiles(examplePath, envPath) {
 	const newVars = [];
 	const updatedVars = [];
 	
-	// 检查新增的变量
+	// 只检查新增的变量，不覆盖现有的
 	Object.keys(exampleVars).forEach(key => {
 		if (!(key in envVars)) {
 			merged[key] = exampleVars[key];
 			newVars.push(key);
 		} else if (envVars[key] === exampleVars[key] && exampleVars[key].includes('your_')) {
-			// 检查是否有默认值需要更新
+			// 检查是否有默认值需要更新，但不自动更新
 			updatedVars.push(key);
 		}
 	});
@@ -99,19 +99,56 @@ function mergeEnvFiles(examplePath, envPath) {
 	return { merged, newVars, updatedVars, comments };
 }
 
-// 生成环境变量文件内容
-function generateEnvContent(envVars, comments) {
-	let content = '';
+// 智能合并 .env 文件内容，保留现有结构和注释
+function smartMergeEnvContent(examplePath, envPath) {
+	if (!existsSync(envPath)) {
+		// 如果 .env 不存在，直接复制 env.example
+		const exampleContent = readFileSync(examplePath, 'utf8');
+		writeFileSync(envPath, exampleContent);
+		return { newVars: Object.keys(parseEnvFile(examplePath)), updatedVars: [] };
+	}
 	
-	Object.keys(envVars).forEach(key => {
-		const comment = comments[key];
-		if (comment) {
-			content += `# ${comment}\n`;
+	const exampleVars = parseEnvFile(examplePath);
+	const existingContent = readFileSync(envPath, 'utf8');
+	const existingVars = parseEnvFile(envPath);
+	
+	const newVars = [];
+	const updatedVars = [];
+	
+	// 检查哪些变量是新增的
+	Object.keys(exampleVars).forEach(key => {
+		if (!(key in existingVars)) {
+			newVars.push(key);
+		} else if (existingVars[key] === exampleVars[key] && exampleVars[key].includes('your_')) {
+			updatedVars.push(key);
 		}
-		content += `${key}=${envVars[key]}\n\n`;
 	});
 	
-	return content;
+	// 如果没有新变量，直接返回
+	if (newVars.length === 0) {
+		return { newVars: [], updatedVars };
+	}
+	
+	// 在现有 .env 文件末尾添加新变量
+	let newContent = existingContent;
+	
+	// 确保文件以换行符结尾
+	if (!newContent.endsWith('\n')) {
+		newContent += '\n';
+	}
+	
+	// 添加新变量的注释和值
+	newVars.forEach(key => {
+		const comment = getComments(examplePath)[key];
+		if (comment) {
+			newContent += `# ${comment}\n`;
+		}
+		newContent += `${key}=${exampleVars[key]}\n`;
+	});
+	
+	writeFileSync(envPath, newContent);
+	
+	return { newVars, updatedVars };
 }
 
 // 显示需要更新的变量
@@ -162,31 +199,24 @@ async function main() {
 		process.exit(1);
 	}
 	
-	// 合并环境变量
-	const { merged, newVars, updatedVars, comments } = mergeEnvFiles(examplePath, envPath);
+	// 智能合并环境变量文件
+	const { newVars, updatedVars } = smartMergeEnvContent(examplePath, envPath);
+	const comments = getComments(examplePath);
 	
 	// 显示更新提示
 	const hasUpdates = showUpdatePrompt(newVars, updatedVars, comments);
 	
 	if (hasUpdates) {
-		// 询问是否自动更新
-		logBold('\n🤔 是否自动将新增配置添加到 .env 文件？', 'magenta');
-		log('(这将保留您现有的配置，只添加新的配置项)', 'blue');
+		logBold('\n📝 已自动将新增配置添加到 .env 文件！', 'green');
+		log('(保留了您现有的配置，只添加了新的配置项)', 'blue');
 		
-		// 在 Node.js 中模拟用户输入（实际使用时需要用户手动确认）
-		logBold('\n📝 正在更新 .env 文件...', 'green');
-		
-		// 生成新的 .env 内容
-		const envContent = generateEnvContent(merged, comments);
-		writeFileSync(envPath, envContent);
-		
-		logBold('✅ .env 文件已更新！', 'green');
 		logBold('\n⚠️  重要提醒：', 'yellow');
 		log('请检查并更新以下关键配置项：', 'yellow');
 		
-		const importantKeys = ['SESSION_SECRET', 'DATABASE_URL', 'AI_PROVIDER'];
+		const importantKeys = ['SESSION_SECRET', 'DATABASE_URL', 'AI_PROVIDER', 'DOUBAO_API_KEY'];
 		importantKeys.forEach(key => {
-			if (merged[key] && merged[key].includes('your_')) {
+			const currentVars = parseEnvFile(envPath);
+			if (currentVars[key] && currentVars[key].includes('your_')) {
 				log(`  - ${key}: 需要设置实际值`, 'red');
 			}
 		});
@@ -195,6 +225,7 @@ async function main() {
 		log('- SESSION_SECRET: 生成随机字符串，至少32字符', 'blue');
 		log('- DATABASE_URL: Supabase使用连接字符串', 'blue');
 		log('- AI_PROVIDER: 选择 AI 提供商并配置对应的 API 密钥', 'blue');
+		log('- DOUBAO_API_KEY: 豆包 API 密钥（默认提供商）', 'blue');
 		
 		logBold('\n🔗 相关文档：', 'cyan');
 		log('- 环境变量说明: env.example', 'cyan');

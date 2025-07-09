@@ -2,7 +2,7 @@
 	import { supportedProviders, providerDisplayNames } from '$lib/types/ai-providers.js';
 	import type { AIProvider } from '$lib/types/ai-providers.js';
 	
-	export let selectedProvider: AIProvider = 'deepseek';
+	export let selectedProvider: AIProvider = 'doubao';
 	export let disabled = false;
 	
 	function handleProviderChange(event: Event) {

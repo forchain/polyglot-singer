@@ -23,7 +23,7 @@
 	let artist = '滨崎步';
 	let sourceLanguage = 'ja';
 	let targetLanguage = 'zh';
-	let selectedProvider: AIProvider = 'deepseek';
+	let selectedProvider: AIProvider = 'doubao';
 	let analysis: LyricAnalysis | null = null;
 	let isAnalyzing = false;
 	let error: string | null = null;

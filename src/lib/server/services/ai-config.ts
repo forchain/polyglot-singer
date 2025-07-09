@@ -2,10 +2,15 @@
 // Supports multiple OpenAI-compatible providers
 import type { AIProvider } from '$lib/types/ai-providers.js';
 import {
+	DOUBAO_API_KEY,
+	DOUBAO_MODEL,
+	DOUBAO_MODEL_DETECTION,
 	DEEPSEEK_API_KEY,
 	DEEPSEEK_MODEL,
 	DEEPSEEK_MODEL_DETECTION
 } from '$env/static/private';
+
+
 
 export interface AIConfig {
 	provider: AIProvider;
@@ -20,18 +25,24 @@ export interface AIConfig {
 
 // Default configuration
 export const defaultConfig: AIConfig = {
-	provider: 'deepseek',
-	apiKey: DEEPSEEK_API_KEY || '',
-	baseURL: 'https://api.deepseek.com/v1',
-	model: DEEPSEEK_MODEL || 'deepseek-chat',
-	detectionModel: DEEPSEEK_MODEL_DETECTION || 'deepseek-chat',
-	timeout: 30000,
+	provider: 'doubao',
+	apiKey: DOUBAO_API_KEY || '',
+	baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+	model: DOUBAO_MODEL || 'doubao-seed-1-6-flash-250615',
+	detectionModel: DOUBAO_MODEL_DETECTION || 'doubao-seed-1-6-flash-250615',
+	timeout: 300000,
 	maxTokens: 4000,
 	temperature: 0.3
 };
 
 // Provider-specific configurations
 export const providerConfigs: Record<string, Partial<AIConfig>> = {
+	doubao: {
+		provider: 'doubao',
+		baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+		model: 'doubao-seed-1-6-flash-250615',
+		detectionModel: 'doubao-seed-1-6-flash-250615'
+	},
 	deepseek: {
 		provider: 'deepseek',
 		baseURL: 'https://api.deepseek.com/v1',
@@ -70,10 +81,19 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 
 // Get configuration for a specific provider
 export function getAIConfig(provider?: string): AIConfig {
-	const providerName = provider || 'deepseek';
-	const baseConfig = providerConfigs[providerName] || providerConfigs.deepseek;
+	const providerName = provider || 'doubao';
+	const baseConfig = providerConfigs[providerName] || providerConfigs.doubao;
 
-	if (providerName === 'deepseek') {
+	if (providerName === 'doubao') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			apiKey: DOUBAO_API_KEY || '',
+			baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+			model: DOUBAO_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: DOUBAO_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+		};
+	} else if (providerName === 'deepseek') {
 		return {
 			...defaultConfig,
 			...baseConfig,
