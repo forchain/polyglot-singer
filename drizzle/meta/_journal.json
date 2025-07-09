@@ -43,6 +43,13 @@
       "when": 1751916158758,
       "tag": "0005_flaky_micromacro",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1752089771268,
+      "tag": "0006_bouncy_shinko_yamashiro",
+      "breakpoints": true
     }
   ]
 }

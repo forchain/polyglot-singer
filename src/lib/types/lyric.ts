@@ -19,6 +19,7 @@ export interface LineAnalysis {
 }
 
 export interface LyricAnalysis {
+	id?: string; // 添加id字段
 	title?: string;
 	artist?: string;
 	sourceLanguage: string;
@@ -79,4 +80,34 @@ export interface PhoneticConfig {
 	style: PhoneticStyle;
 	showTones?: boolean; // For tonal languages like Chinese
 	useNativeScript?: boolean; // For languages with different scripts
+}
+
+// 单词语法分析相关类型
+export interface GrammarRule {
+	rule: string;
+	description: string;
+	examples: string[];
+}
+
+export interface WordGrammarAnalysis {
+	id?: string;
+	word: string;
+	language: string;
+	partOfSpeech?: string;
+	grammarRules?: GrammarRule[];
+	examples?: string[];
+	analysisJson: string;
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+export interface WordGrammarAnalysisRequest {
+	word: string;
+	language: string;
+}
+
+export interface WordGrammarAnalysisResponse {
+	success: boolean;
+	analysis?: WordGrammarAnalysis;
+	error?: string;
 } 

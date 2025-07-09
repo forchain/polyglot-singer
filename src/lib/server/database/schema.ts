@@ -83,6 +83,19 @@ export const analyzedLyrics = pgTable('analyzed_lyrics', {
 	createdAt: timestamp('created_at').defaultNow()
 });
 
+// 单词语法分析表
+export const wordGrammarAnalysis = pgTable('word_grammar_analysis', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	word: text('word').notNull(),
+	language: text('language').notNull(),
+	partOfSpeech: text('part_of_speech'), // 词性
+	grammarRules: text('grammar_rules'), // JSON string 存储语法规则
+	examples: text('examples'), // JSON string 存储例句
+	analysisJson: text('analysis_json').notNull(), // 完整的分析结果JSON
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
+});
+
 // Types derived from schema
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -92,4 +105,6 @@ export type NewLyric = typeof lyrics.$inferInsert;
 export type LearningProgress = typeof learningProgress.$inferSelect;
 export type UserPreferences = typeof userPreferences.$inferSelect; 
 export type AnalyzedLyric = typeof analyzedLyrics.$inferSelect;
-export type NewAnalyzedLyric = typeof analyzedLyrics.$inferInsert; 
+export type NewAnalyzedLyric = typeof analyzedLyrics.$inferInsert;
+export type WordGrammarAnalysis = typeof wordGrammarAnalysis.$inferSelect;
+export type NewWordGrammarAnalysis = typeof wordGrammarAnalysis.$inferInsert; 

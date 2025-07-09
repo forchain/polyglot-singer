@@ -70,9 +70,6 @@ export async function analyzeToLyrics(
 				}
 			],
 			temperature: aiConfig.temperature,
-			thinking: {
-				"type": "disabled",
-			},
 			max_tokens: aiConfig.maxTokens
 		});
 
@@ -333,4 +330,102 @@ Lyric lines to analyze:
 ${lines.join('\n')}
 
 IMPORTANT: Return ONLY the JSON object, no extra text or explanation.`;
+}
+
+/**
+ * 分析单词语法
+ */
+export async function analyzeWordGrammar(word: string, language: string): Promise<{
+	partOfSpeech?: string;
+	grammarRules?: any[];
+	examples?: string[];
+}> {
+	try {
+		const aiConfig = getAIConfig();
+		const client = new OpenAI({
+			apiKey: aiConfig.apiKey,
+			baseURL: aiConfig.baseURL,
+			timeout: aiConfig.timeout
+		});
+
+		const languageNames = {
+			en: 'English',
+			zh: 'Chinese (Mandarin)',
+			yue: 'Cantonese (Yue Chinese)',
+			es: 'Spanish',
+			fr: 'French',
+			de: 'German',
+			ja: 'Japanese',
+			ko: 'Korean',
+			it: 'Italian',
+			pt: 'Portuguese',
+			ru: 'Russian'
+		};
+
+		const langName = languageNames[language as keyof typeof languageNames] || language;
+
+		const prompt = `
+Please analyze the grammar of the word "${word}".
+
+Requirements:
+1. Analyze the grammar, part of speech, and usage of the word.
+2. Output all explanations and descriptions in ${langName}.
+3. No example sentences needed.
+
+Return a JSON object with the following structure:
+{
+  "grammarRules": [
+    {
+      "rule": "Short title",
+      "description": "Detailed grammar explanation"
+    }
+  ]
+}
+
+IMPORTANT: All content must be in ${langName}. Return ONLY the JSON object, no extra text.`;
+
+		const completion = await client.chat.completions.create({
+			model: aiConfig.model,
+			messages: [
+				{
+					role: 'system',
+					content: 'You are a professional linguist and grammar expert. Provide accurate grammar analysis for words in various languages.'
+				},
+				{
+					role: 'user',
+					content: prompt
+				}
+			],
+			temperature: 0.3,
+			max_tokens: 1000
+		});
+
+		const response = completion.choices[0]?.message?.content;
+		if (!response) {
+			throw new Error('No response from AI');
+		}
+
+		// 尝试解析JSON
+		let parsed;
+		try {
+			parsed = JSON.parse(response);
+		} catch (e) {
+			// 使用jsonrepair修复
+			try {
+				const repaired = jsonrepair(response);
+				parsed = JSON.parse(repaired);
+			} catch (e2) {
+				console.error('Failed to parse word grammar analysis:', e2);
+				throw new Error('Failed to parse AI response');
+			}
+		}
+
+		return {
+			grammarRules: parsed.grammarRules || []
+		};
+
+	} catch (error) {
+		console.error('Word grammar analysis error:', error);
+		throw new Error('Failed to analyze word grammar: ' + (error as Error).message);
+	}
 } 

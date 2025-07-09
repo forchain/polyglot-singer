@@ -416,6 +416,54 @@
 	{:else if gallery.length === 0}
 		<div class="text-center text-gray-500">暂无公开作品</div>
 	{:else}
+		<div class="mb-8">
+			<h2 class="text-2xl font-bold mb-4">功能特性</h2>
+			<div class="grid md:grid-cols-2 gap-6">
+				<div class="p-6 border rounded-lg bg-white shadow-sm">
+					<h3 class="text-lg font-semibold mb-3">🎵 歌词分析</h3>
+					<p class="text-gray-600 mb-4">支持多语言歌词的智能分析，提供逐词翻译和音标标注。</p>
+					<ul class="text-sm text-gray-600 space-y-1">
+						<li>• 支持10+种语言</li>
+						<li>• 逐词翻译和音标</li>
+						<li>• 上下文语义分析</li>
+						<li>• 智能语言检测</li>
+					</ul>
+				</div>
+				
+				<div class="p-6 border rounded-lg bg-white shadow-sm">
+					<h3 class="text-lg font-semibold mb-3">🔤 语法分析</h3>
+					<p class="text-gray-600 mb-4">双击单词即可获得详细的语法分析，包括词性、语法规则和例句。</p>
+					<ul class="text-sm text-gray-600 space-y-1">
+						<li>• 双击单词触发分析</li>
+						<li>• 多层缓存机制</li>
+						<li>• 词性和语法规则</li>
+						<li>• 实用例句展示</li>
+					</ul>
+				</div>
+
+				<div class="p-6 border rounded-lg bg-white shadow-sm">
+					<h3 class="text-lg font-semibold mb-3">🎤 语音朗读</h3>
+					<p class="text-gray-600 mb-4">点击单词即可听到标准发音，支持多种语音选择。</p>
+					<ul class="text-sm text-gray-600 space-y-1">
+						<li>• 标准发音朗读</li>
+						<li>• 多种语音选择</li>
+						<li>• 实时语音合成</li>
+						<li>• 语音速度调节</li>
+					</ul>
+				</div>
+
+				<div class="p-6 border rounded-lg bg-white shadow-sm">
+					<h3 class="text-lg font-semibold mb-3">📚 学习管理</h3>
+					<p class="text-gray-600 mb-4">管理你的学习进度，跟踪掌握情况，个性化学习体验。</p>
+					<ul class="text-sm text-gray-600 space-y-1">
+						<li>• 学习进度跟踪</li>
+						<li>• 个人词库管理</li>
+						<li>• 复习提醒功能</li>
+						<li>• 学习数据统计</li>
+					</ul>
+				</div>
+			</div>
+		</div>
 		<div class="grid md:grid-cols-2 gap-6">
 			{#each gallery as item}
 				<div class="p-6 border rounded-lg bg-white shadow-sm flex flex-col justify-between">
