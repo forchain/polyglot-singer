@@ -68,6 +68,21 @@
 		console.log('【voice debug】getSortedVoices', selected, rest);
 		return selected ? [selected, ...rest] : voices;
 	}
+
+	// 日志追踪每个 WordUnit 的 props
+	console.log('LyricDisplay analysis:', analysis);
+	if (analysis && analysis.lines) {
+		analysis.lines.forEach(line => {
+			line.words.forEach(word => {
+				console.log('WordUnit props:', {
+					word,
+					sourceLanguage: analysis.sourceLanguage,
+					targetLanguage: analysis.targetLanguage,
+					selectedVoice
+				});
+			});
+		});
+	}
 </script>
 
 <!-- 全局voice选择 -->
@@ -120,7 +135,7 @@
 				<!-- 逐字分析 -->
 				<div class="flex flex-wrap gap-2 items-start">
 					{#each line.words as word}
-						<WordUnit {word} sourceLanguage={analysis.sourceLanguage} selectedVoice={selectedVoice} />
+						<WordUnit {word} sourceLanguage={analysis.sourceLanguage} targetLanguage={analysis.targetLanguage} selectedVoice={selectedVoice} />
 					{/each}
 				</div>
 			</div>
