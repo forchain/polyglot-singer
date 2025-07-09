@@ -2,15 +2,15 @@
 // Supports multiple OpenAI-compatible providers
 import type { AIProvider } from '$lib/types/ai-providers.js';
 import {
+	DOUBAO_API_KEY,
+	DOUBAO_MODEL,
+	DOUBAO_MODEL_DETECTION,
 	DEEPSEEK_API_KEY,
 	DEEPSEEK_MODEL,
 	DEEPSEEK_MODEL_DETECTION
 } from '$env/static/private';
 
-// Doubao environment variables (optional for development)
-const DOUBAO_API_KEY = process.env.DOUBAO_API_KEY || '';
-const DOUBAO_MODEL = process.env.DOUBAO_MODEL || 'doubao-lite-32k-240828';
-const DOUBAO_MODEL_DETECTION = process.env.DOUBAO_MODEL_DETECTION || 'doubao-lite-32k-240828';
+
 
 export interface AIConfig {
 	provider: AIProvider;
@@ -28,9 +28,9 @@ export const defaultConfig: AIConfig = {
 	provider: 'doubao',
 	apiKey: DOUBAO_API_KEY || '',
 	baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
-	model: DOUBAO_MODEL || 'doubao-lite-32k-240828',
-	detectionModel: DOUBAO_MODEL_DETECTION || 'doubao-lite-32k-240828',
-	timeout: 30000,
+	model: DOUBAO_MODEL || 'doubao-seed-1-6-flash-250615',
+	detectionModel: DOUBAO_MODEL_DETECTION || 'doubao-seed-1-6-flash-250615',
+	timeout: 300000,
 	maxTokens: 4000,
 	temperature: 0.3
 };
@@ -40,8 +40,8 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 	doubao: {
 		provider: 'doubao',
 		baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
-		model: 'doubao-lite-32k-240828',
-		detectionModel: 'doubao-lite-32k-240828'
+		model: 'doubao-seed-1-6-flash-250615',
+		detectionModel: 'doubao-seed-1-6-flash-250615'
 	},
 	deepseek: {
 		provider: 'deepseek',
