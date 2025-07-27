@@ -65,26 +65,79 @@
 				return;
 			}
 
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-			mediaRecorder = new MediaRecorder(stream);
+			// 检查MediaRecorder支持
+			if (!window.MediaRecorder) {
+				alert('您的浏览器不支持录音功能，请使用Chrome或Safari');
+				return;
+			}
+
+			const stream = await navigator.mediaDevices.getUserMedia({ 
+				audio: {
+					echoCancellation: true,
+					noiseSuppression: true,
+					sampleRate: 44100
+				} 
+			});
+
+			console.log('获取到音频流:', stream.getAudioTracks().length, '个音频轨道');
+
+			// 尝试不同的音频格式
+			let mimeType = 'audio/webm';
+			if (!MediaRecorder.isTypeSupported('audio/webm')) {
+				mimeType = 'audio/mp4';
+				if (!MediaRecorder.isTypeSupported('audio/mp4')) {
+					mimeType = 'audio/wav';
+				}
+			}
+
+			console.log('使用音频格式:', mimeType);
+
+			mediaRecorder = new MediaRecorder(stream, { mimeType });
 			audioChunks = [];
 
 			mediaRecorder.ondataavailable = (event) => {
+				console.log('收到音频数据块，大小:', event.data.size);
 				audioChunks.push(event.data);
 			};
 
 			mediaRecorder.onstop = async () => {
-				const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-				console.log('录音完成，音频大小:', audioBlob.size);
+				console.log('录音停止，音频块数量:', audioChunks.length);
+				const audioBlob = new Blob(audioChunks, { type: mimeType });
+				console.log('录音完成，音频大小:', audioBlob.size, '字节');
+				
+				if (audioBlob.size === 0) {
+					alert('录音数据为空，请重新录制');
+					stream.getTracks().forEach(track => track.stop());
+					return;
+				}
+
 				await saveRecording(audioBlob);
 				stream.getTracks().forEach(track => track.stop());
 			};
 
-			mediaRecorder.start();
+			mediaRecorder.onerror = (event) => {
+				console.error('MediaRecorder错误:', event);
+				alert('录音过程中出现错误，请重试');
+				stream.getTracks().forEach(track => track.stop());
+			};
+
+			// 设置数据可用时的回调间隔（毫秒）
+			mediaRecorder.start(1000); // 每秒触发一次ondataavailable
 			isRecording = true;
+			console.log('开始录音...');
 		} catch (error) {
 			console.error('录音失败:', error);
-			alert('无法访问麦克风，请检查权限设置');
+			if (error instanceof Error) {
+				if (error.name === 'NotAllowedError') {
+					alert('请允许访问麦克风权限');
+				} else if (error.name === 'NotFoundError') {
+					alert('未找到麦克风设备');
+				} else {
+					alert('无法访问麦克风: ' + error.message);
+				}
+			} else {
+				alert('无法访问麦克风，请检查权限设置');
+			}
 		}
 	}
 
@@ -99,10 +152,24 @@
 	// 保存录音
 	async function saveRecording(audioBlob: Blob) {
 		try {
+			// 检查音频数据
+			if (!audioBlob || audioBlob.size === 0) {
+				alert('录音数据为空，请重新录制');
+				return;
+			}
+
 			const reader = new FileReader();
 			reader.onload = async () => {
 				const base64Data = reader.result as string;
+				console.log('Base64数据长度:', base64Data.length);
+				
 				const audioData = base64Data.split(',')[1]; // 移除 data:audio/wav;base64, 前缀
+
+				// 检查音频数据是否有效
+				if (!audioData || audioData.length === 0) {
+					alert('音频数据转换失败，请重新录制');
+					return;
+				}
 
 				// 调试信息
 				console.log('保存录音参数:', {
@@ -110,7 +177,8 @@
 					word,
 					lineNumber,
 					audioDataLength: audioData?.length || 0,
-					audioBlobSize: audioBlob.size
+					audioBlobSize: audioBlob.size,
+					audioBlobType: audioBlob.type
 				});
 
 				const requestBody = {
@@ -118,9 +186,11 @@
 					word,
 					lineNumber,
 					audioData,
-					audioType: 'audio/wav',
+					audioType: audioBlob.type || 'audio/wav',
 					duration: audioBlob.size // 简单估算时长
 				};
+
+				console.log('发送请求体大小:', JSON.stringify(requestBody).length);
 
 				const response = await fetch('/api/recordings', {
 					method: 'POST',
@@ -146,6 +216,12 @@
 					alert('保存录音失败: ' + result.error);
 				}
 			};
+
+			reader.onerror = () => {
+				console.error('FileReader读取失败');
+				alert('音频数据读取失败，请重新录制');
+			};
+
 			reader.readAsDataURL(audioBlob);
 		} catch (error) {
 			console.error('保存录音失败:', error);
