@@ -11,8 +11,25 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		const { lyricId, word, lineNumber, audioData, audioType, duration } = await request.json();
 
-		if (!lyricId || !audioData) {
-			return json({ success: false, error: '缺少必要参数' }, { status: 400 });
+		// 调试信息
+		console.log('API接收到的参数:', {
+			lyricId,
+			word,
+			lineNumber,
+			audioDataLength: audioData?.length || 0,
+			audioType,
+			duration,
+			userId: user.id
+		});
+
+		if (!lyricId) {
+			console.error('缺少lyricId参数');
+			return json({ success: false, error: '缺少歌词ID参数' }, { status: 400 });
+		}
+
+		if (!audioData) {
+			console.error('缺少audioData参数');
+			return json({ success: false, error: '缺少音频数据参数' }, { status: 400 });
 		}
 
 		// 检查是否已存在录音

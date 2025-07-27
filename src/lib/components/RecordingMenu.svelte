@@ -52,6 +52,19 @@
 	// 开始录音
 	async function startRecording() {
 		try {
+			// 检查参数
+			console.log('开始录音，参数检查:', {
+				lyricId,
+				word,
+				lineNumber,
+				isVisible
+			});
+
+			if (!lyricId) {
+				alert('缺少歌词ID，请刷新页面重试');
+				return;
+			}
+
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 			mediaRecorder = new MediaRecorder(stream);
 			audioChunks = [];
@@ -62,6 +75,7 @@
 
 			mediaRecorder.onstop = async () => {
 				const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+				console.log('录音完成，音频大小:', audioBlob.size);
 				await saveRecording(audioBlob);
 				stream.getTracks().forEach(track => track.stop());
 			};
@@ -90,17 +104,28 @@
 				const base64Data = reader.result as string;
 				const audioData = base64Data.split(',')[1]; // 移除 data:audio/wav;base64, 前缀
 
+				// 调试信息
+				console.log('保存录音参数:', {
+					lyricId,
+					word,
+					lineNumber,
+					audioDataLength: audioData?.length || 0,
+					audioBlobSize: audioBlob.size
+				});
+
+				const requestBody = {
+					lyricId,
+					word,
+					lineNumber,
+					audioData,
+					audioType: 'audio/wav',
+					duration: audioBlob.size // 简单估算时长
+				};
+
 				const response = await fetch('/api/recordings', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						lyricId,
-						word,
-						lineNumber,
-						audioData,
-						audioType: 'audio/wav',
-						duration: audioBlob.size // 简单估算时长
-					})
+					body: JSON.stringify(requestBody)
 				});
 
 				const result = await response.json();
@@ -117,6 +142,7 @@
 					
 					dispatch('recordingSaved', { recording: result.recording });
 				} else {
+					console.error('保存录音失败:', result.error);
 					alert('保存录音失败: ' + result.error);
 				}
 			};
