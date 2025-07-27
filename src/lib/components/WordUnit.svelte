@@ -82,9 +82,10 @@
 
 	// 触摸开始
 	function handleTouchStart(event: TouchEvent) {
-		event.preventDefault(); // 阻止默认行为
 		const touch = event.touches[0];
 		longPressTimer = setTimeout(() => {
+			// 只有在长按时才阻止默认行为
+			event.preventDefault();
 			showRecordingMenu = true;
 			menuPosition = { x: touch.clientX, y: touch.clientY };
 		}, LONG_PRESS_DELAY);

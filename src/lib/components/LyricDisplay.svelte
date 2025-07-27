@@ -120,9 +120,10 @@
 
 	// 触摸开始
 	function handleLineTouchStart(event: TouchEvent, lineNumber: number) {
-		event.preventDefault(); // 阻止默认行为
 		const touch = event.touches[0];
 		longPressTimer = setTimeout(() => {
+			// 只有在长按时才阻止默认行为
+			event.preventDefault();
 			showLineRecordingMenu = true;
 			menuPosition = { x: touch.clientX, y: touch.clientY };
 			currentLineNumber = lineNumber;
