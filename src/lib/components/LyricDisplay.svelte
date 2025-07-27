@@ -81,6 +81,8 @@
 
 	// 长按开始
 	function handleLineMouseDown(event: MouseEvent, lineNumber: number) {
+		// 阻止默认行为，防止触发点击事件
+		event.preventDefault();
 		longPressTimer = setTimeout(() => {
 			showLineRecordingMenu = true;
 			menuPosition = { x: event.clientX, y: event.clientY };
@@ -89,10 +91,14 @@
 	}
 
 	// 长按结束
-	function handleLineMouseUp() {
+	function handleLineMouseUp(event: MouseEvent) {
 		if (longPressTimer) {
 			clearTimeout(longPressTimer);
 			longPressTimer = null;
+		}
+		// 如果菜单已显示，阻止默认行为
+		if (showLineRecordingMenu) {
+			event.preventDefault();
 		}
 	}
 
@@ -104,18 +110,70 @@
 		}
 	}
 
+	// 右键菜单
+	function handleLineContextMenu(event: MouseEvent, lineNumber: number) {
+		event.preventDefault(); // 阻止浏览器默认右键菜单
+		showLineRecordingMenu = true;
+		menuPosition = { x: event.clientX, y: event.clientY };
+		currentLineNumber = lineNumber;
+	}
+
+	// 触摸开始
+	function handleLineTouchStart(event: TouchEvent, lineNumber: number) {
+		event.preventDefault(); // 阻止默认行为
+		const touch = event.touches[0];
+		longPressTimer = setTimeout(() => {
+			showLineRecordingMenu = true;
+			menuPosition = { x: touch.clientX, y: touch.clientY };
+			currentLineNumber = lineNumber;
+		}, LONG_PRESS_DELAY);
+	}
+
+	// 触摸结束
+	function handleLineTouchEnd(event: TouchEvent) {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+		// 如果菜单已显示，阻止默认行为
+		if (showLineRecordingMenu) {
+			event.preventDefault();
+		}
+	}
+
+	// 触摸移动
+	function handleLineTouchMove(event: TouchEvent) {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+	}
+
 	// 关闭录音菜单
 	function closeLineRecordingMenu() {
 		showLineRecordingMenu = false;
 		currentLineNumber = null;
 	}
+
+	// 键盘事件处理
+	function handleLineKeyDown(event: KeyboardEvent, lineNumber: number) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			showLineRecordingMenu = true;
+			const target = event.target as HTMLElement;
+			const rect = target.getBoundingClientRect();
+			menuPosition = { x: rect.left, y: rect.bottom };
+			currentLineNumber = lineNumber;
+		}
+	}
 </script>
 
 <!-- 全局voice选择 -->
 <div class="flex items-center gap-2 mb-4">
-	<label class="text-sm text-gray-600">发音Voice：</label>
+	<label for="voice-select" class="text-sm text-gray-600">发音Voice：</label>
 	{#if voices.length > 0}
 		<select
+			id="voice-select"
 			bind:value={selectedVoice}
 			class="text-xs border rounded px-1 py-0.5"
 		>
@@ -149,7 +207,14 @@
 							on:mousedown={(e) => handleLineMouseDown(e, line.lineNumber)}
 							on:mouseup={handleLineMouseUp}
 							on:mouseleave={handleLineMouseLeave}
-							title="长按录制整句发音"
+							on:contextmenu={(e) => handleLineContextMenu(e, line.lineNumber)}
+							on:touchstart={(e) => handleLineTouchStart(e, line.lineNumber)}
+							on:touchend={handleLineTouchEnd}
+							on:touchmove={handleLineTouchMove}
+							on:keydown={(e) => handleLineKeyDown(e, line.lineNumber)}
+							title="长按录制整句发音，右键录音菜单"
+							role="button"
+							tabindex="0"
 						>
 							第 {line.lineNumber} 行
 						</span>
@@ -160,7 +225,14 @@
 								on:mousedown={(e) => handleLineMouseDown(e, line.lineNumber)}
 								on:mouseup={handleLineMouseUp}
 								on:mouseleave={handleLineMouseLeave}
-								title="长按录制整句发音"
+								on:contextmenu={(e) => handleLineContextMenu(e, line.lineNumber)}
+								on:touchstart={(e) => handleLineTouchStart(e, line.lineNumber)}
+								on:touchend={handleLineTouchEnd}
+								on:touchmove={handleLineTouchMove}
+								on:keydown={(e) => handleLineKeyDown(e, line.lineNumber)}
+								title="长按录制整句发音，右键录音菜单"
+								role="button"
+								tabindex="0"
 							>
 								{line.lineTranslation}
 							</span>

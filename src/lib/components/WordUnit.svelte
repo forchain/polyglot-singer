@@ -45,6 +45,8 @@
 
 	// 长按开始
 	function handleMouseDown(event: MouseEvent) {
+		// 阻止默认行为，防止触发点击事件
+		event.preventDefault();
 		longPressTimer = setTimeout(() => {
 			showRecordingMenu = true;
 			menuPosition = { x: event.clientX, y: event.clientY };
@@ -52,15 +54,56 @@
 	}
 
 	// 长按结束
-	function handleMouseUp() {
+	function handleMouseUp(event: MouseEvent) {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+		// 如果菜单已显示，阻止默认行为
+		if (showRecordingMenu) {
+			event.preventDefault();
+		}
+	}
+
+	// 长按取消
+	function handleMouseLeave() {
 		if (longPressTimer) {
 			clearTimeout(longPressTimer);
 			longPressTimer = null;
 		}
 	}
 
-	// 长按取消
-	function handleMouseLeave() {
+	// 右键菜单
+	function handleContextMenu(event: MouseEvent) {
+		event.preventDefault(); // 阻止浏览器默认右键菜单
+		showRecordingMenu = true;
+		menuPosition = { x: event.clientX, y: event.clientY };
+	}
+
+	// 触摸开始
+	function handleTouchStart(event: TouchEvent) {
+		event.preventDefault(); // 阻止默认行为
+		const touch = event.touches[0];
+		longPressTimer = setTimeout(() => {
+			showRecordingMenu = true;
+			menuPosition = { x: touch.clientX, y: touch.clientY };
+		}, LONG_PRESS_DELAY);
+	}
+
+	// 触摸结束
+	function handleTouchEnd(event: TouchEvent) {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+		// 如果菜单已显示，阻止默认行为
+		if (showRecordingMenu) {
+			event.preventDefault();
+		}
+	}
+
+	// 触摸移动
+	function handleTouchMove(event: TouchEvent) {
 		if (longPressTimer) {
 			clearTimeout(longPressTimer);
 			longPressTimer = null;
@@ -145,9 +188,13 @@
 	on:mousedown={handleMouseDown}
 	on:mouseup={handleMouseUp}
 	on:mouseleave={handleMouseLeave}
-	title="点击朗读，双击分析语法，长按录音"
+	on:contextmenu={handleContextMenu}
+	on:touchstart={handleTouchStart}
+	on:touchend={handleTouchEnd}
+	on:touchmove={handleTouchMove}
+	title="点击朗读，双击分析语法，长按录音，右键录音菜单"
 	role="button"
-	aria-label="单词 {word.word}，点击朗读，双击分析语法，长按录音"
+	aria-label="单词 {word.word}，点击朗读，双击分析语法，长按录音，右键录音菜单"
 	on:keydown={(e) => {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();

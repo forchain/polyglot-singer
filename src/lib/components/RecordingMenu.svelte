@@ -243,6 +243,11 @@
 			}
 		};
 
+		// 阻止菜单内的点击事件冒泡
+		const handleMenuClick = (event: MouseEvent) => {
+			event.stopPropagation();
+		};
+
 		document.addEventListener('click', handleClickOutside);
 		
 		// 组件卸载时清理缓存
@@ -258,6 +263,7 @@
 	<div 
 		class="recording-menu fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-2"
 		style="left: {position.x}px; top: {position.y}px;"
+		on:click|stopPropagation
 	>
 		<div class="flex flex-col gap-1">
 			{#if !hasRecording}
