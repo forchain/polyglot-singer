@@ -96,6 +96,24 @@ export const wordGrammarAnalysis = pgTable('word_grammar_analysis', {
 	updatedAt: timestamp('updated_at').defaultNow()
 });
 
+// 录音表 - 存储用户录制的发音
+export const recordings = pgTable('recordings', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	userId: uuid('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	lyricId: uuid('lyric_id')
+		.notNull()
+		.references(() => analyzedLyrics.id, { onDelete: 'cascade' }),
+	word: text('word'), // 单词录音时为单词，整句录音时为null
+	lineNumber: integer('line_number'), // 行号，整句录音时使用
+	audioData: text('audio_data').notNull(), // Base64编码的音频数据
+	audioType: text('audio_type').notNull().default('audio/wav'), // 音频格式
+	duration: integer('duration'), // 录音时长（毫秒）
+	createdAt: timestamp('created_at').defaultNow(),
+	updatedAt: timestamp('updated_at').defaultNow()
+});
+
 // Types derived from schema
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -107,4 +125,6 @@ export type UserPreferences = typeof userPreferences.$inferSelect;
 export type AnalyzedLyric = typeof analyzedLyrics.$inferSelect;
 export type NewAnalyzedLyric = typeof analyzedLyrics.$inferInsert;
 export type WordGrammarAnalysis = typeof wordGrammarAnalysis.$inferSelect;
-export type NewWordGrammarAnalysis = typeof wordGrammarAnalysis.$inferInsert; 
+export type NewWordGrammarAnalysis = typeof wordGrammarAnalysis.$inferInsert;
+export type Recording = typeof recordings.$inferSelect;
+export type NewRecording = typeof recordings.$inferInsert; 

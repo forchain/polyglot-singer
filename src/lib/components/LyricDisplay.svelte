@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { LyricAnalysis } from '$lib/types/lyric.js';
 	import WordUnit from './WordUnit.svelte';
+	import RecordingMenu from './RecordingMenu.svelte';
 	import { onMount } from 'svelte';
 
 	export let analysis: LyricAnalysis;
 	export let selectedVoice: string = '';
+	export let lyricId: string = ''; // 新增歌词ID
 
 	// 全局voice选择
 	let voices: SpeechSynthesisVoice[] = [];
@@ -69,19 +71,43 @@
 		return selected ? [selected, ...rest] : voices;
 	}
 
-	// 日志追踪每个 WordUnit 的 props
-	console.log('LyricDisplay analysis:', analysis);
-	if (analysis && analysis.lines) {
-		analysis.lines.forEach(line => {
-			line.words.forEach(word => {
-				console.log('WordUnit props:', {
-					word,
-					sourceLanguage: analysis.sourceLanguage,
-					targetLanguage: analysis.targetLanguage,
-					selectedVoice
-				});
-			});
-		});
+
+	// 长按菜单相关状态
+	let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+	let showLineRecordingMenu = false;
+	let menuPosition = { x: 0, y: 0 };
+	let currentLineNumber: number | null = null;
+	const LONG_PRESS_DELAY = 500; // 长按500ms触发菜单
+
+	// 长按开始
+	function handleLineMouseDown(event: MouseEvent, lineNumber: number) {
+		longPressTimer = setTimeout(() => {
+			showLineRecordingMenu = true;
+			menuPosition = { x: event.clientX, y: event.clientY };
+			currentLineNumber = lineNumber;
+		}, LONG_PRESS_DELAY);
+	}
+
+	// 长按结束
+	function handleLineMouseUp() {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+	}
+
+	// 长按取消
+	function handleLineMouseLeave() {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+	}
+
+	// 关闭录音菜单
+	function closeLineRecordingMenu() {
+		showLineRecordingMenu = false;
+		currentLineNumber = null;
 	}
 </script>
 
@@ -118,9 +144,26 @@
 			<div class="lyric-line-box mb-6 p-4 border border-gray-200 rounded-lg bg-white">
 				<div class="flex justify-between items-center mb-2">
 					<div class="flex items-center gap-4 w-full">
-						<span class="text-xs text-gray-500 font-mono whitespace-nowrap">第 {line.lineNumber} 行</span>
+						<span 
+							class="text-xs text-gray-500 font-mono whitespace-nowrap cursor-pointer hover:text-gray-700"
+							on:mousedown={(e) => handleLineMouseDown(e, line.lineNumber)}
+							on:mouseup={handleLineMouseUp}
+							on:mouseleave={handleLineMouseLeave}
+							title="长按录制整句发音"
+						>
+							第 {line.lineNumber} 行
+						</span>
 						{#if line.lineTranslation}
-							<span class="line-translation-inhead text-base text-gray-900 font-semibold truncate" style="max-width: 70vw;">{line.lineTranslation}</span>
+							<span 
+								class="line-translation-inhead text-base text-gray-900 font-semibold truncate cursor-pointer hover:text-gray-700" 
+								style="max-width: 70vw;"
+								on:mousedown={(e) => handleLineMouseDown(e, line.lineNumber)}
+								on:mouseup={handleLineMouseUp}
+								on:mouseleave={handleLineMouseLeave}
+								title="长按录制整句发音"
+							>
+								{line.lineTranslation}
+							</span>
 						{/if}
 					</div>
 					<button
@@ -135,13 +178,24 @@
 				<!-- 逐字分析 -->
 				<div class="flex flex-wrap gap-2 items-start">
 					{#each line.words as word}
-						<WordUnit {word} sourceLanguage={analysis.sourceLanguage} targetLanguage={analysis.targetLanguage} selectedVoice={selectedVoice} />
+						<WordUnit {word} sourceLanguage={analysis.sourceLanguage} targetLanguage={analysis.targetLanguage} selectedVoice={selectedVoice} lyricId={lyricId} />
 					{/each}
 				</div>
 			</div>
 		{/each}
 	</div>
 </div>
+
+<!-- 整句录音菜单 -->
+{#if showLineRecordingMenu && currentLineNumber !== null}
+	<RecordingMenu 
+		{lyricId}
+		lineNumber={currentLineNumber}
+		isVisible={showLineRecordingMenu}
+		position={menuPosition}
+		on:close={closeLineRecordingMenu}
+	/>
+{/if}
 
 <style>
 	.lyric-display {

@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { WordAnalysis, WordGrammarAnalysis } from '$lib/types/lyric.js';
 	import { onMount } from 'svelte';
+	import RecordingMenu from './RecordingMenu.svelte';
 
 	export let word: WordAnalysis;
 	export let sourceLanguage: string;
 	export let targetLanguage: string; // 新增目标语言
 	export let selectedVoice: string = '';
+	export let lyricId: string = ''; // 新增歌词ID
 
 	// 语法分析相关状态
 	let grammarAnalysis: WordGrammarAnalysis | null = null;
@@ -18,6 +20,12 @@
 	// 单击/双击互斥逻辑
 	let clickTimer: ReturnType<typeof setTimeout> | null = null;
 	const CLICK_DELAY = 250;
+
+	// 长按菜单相关状态
+	let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+	let showRecordingMenu = false;
+	let menuPosition = { x: 0, y: 0 };
+	const LONG_PRESS_DELAY = 500; // 长按500ms触发菜单
 
 	function handleClick() {
 		if (clickTimer) return;
@@ -33,6 +41,35 @@
 			clickTimer = null;
 		}
 		await analyzeWordGrammar();
+	}
+
+	// 长按开始
+	function handleMouseDown(event: MouseEvent) {
+		longPressTimer = setTimeout(() => {
+			showRecordingMenu = true;
+			menuPosition = { x: event.clientX, y: event.clientY };
+		}, LONG_PRESS_DELAY);
+	}
+
+	// 长按结束
+	function handleMouseUp() {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+	}
+
+	// 长按取消
+	function handleMouseLeave() {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+	}
+
+	// 关闭录音菜单
+	function closeRecordingMenu() {
+		showRecordingMenu = false;
 	}
 
 	function speakWord() {
@@ -105,9 +142,12 @@
 	class="word-unit inline-block mx-1 my-1" 
 	on:click={handleClick} 
 	on:dblclick={handleDoubleClick}
-	title="点击朗读，双击分析语法"
+	on:mousedown={handleMouseDown}
+	on:mouseup={handleMouseUp}
+	on:mouseleave={handleMouseLeave}
+	title="点击朗读，双击分析语法，长按录音"
 	role="button"
-	aria-label="单词 {word.word}，点击朗读，双击分析语法"
+	aria-label="单词 {word.word}，点击朗读，双击分析语法，长按录音"
 	on:keydown={(e) => {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();
@@ -160,6 +200,15 @@
 		</div>
 	</div>
 {/if}
+
+<!-- 录音菜单 -->
+<RecordingMenu 
+	{lyricId}
+	word={word.word}
+	isVisible={showRecordingMenu}
+	position={menuPosition}
+	on:close={closeRecordingMenu}
+/>
 
 <style>
 	.word-unit {
