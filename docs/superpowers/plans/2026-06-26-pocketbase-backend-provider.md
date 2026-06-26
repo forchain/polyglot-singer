@@ -48,6 +48,7 @@ Test cases:
 - invalid provider throws a clear error
 - JSON helpers parse Postgres text and accept PocketBase objects
 - cache-write JSON helper tolerates `null`/`undefined` optional fields
+- preferences JSON helpers keep `defaultVoices` in the same API-visible shape the UI currently expects
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -96,6 +97,7 @@ Test cases:
 - Supabase user-like object maps to `AppUser`
 - analyzed lyrics DB rows map to existing route response shapes
 - word grammar DB rows parse JSON fields correctly
+- preferences rows return `defaultVoices` in the current serialized/string-compatible shape
 - cache save failure is swallowed and logged, matching current behavior
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -157,6 +159,7 @@ Test cases:
 - create payload sets `user` to the current authenticated user id
 - public/private filters are generated consistently
 - word grammar write failure does not throw
+- preferences records normalize PocketBase json fields to the same route response shape as Postgres, especially `defaultVoices`
 - PocketBase SDK auth failures map to `401`
 - missing or inaccessible records map to `404`
 - validation failures map to `400`
@@ -242,6 +245,8 @@ At minimum test:
 
 - selected provider returns the correct adapter
 - hook helper normalizes anonymous user to `null`
+- PocketBase `authRefresh()` failure clears auth state, clears/overwrites stale `pb_auth`, and sets `locals.user` to `null`
+- login/register endpoints write the provider-specific session cookie
 - logout clears provider session state
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -263,7 +268,7 @@ Expose:
 Behavior:
 
 - `postgres`: keep Supabase token validation and user sync behavior.
-- `pocketbase`: load/refresh `pb_auth`, normalize `locals.user`, append updated cookie.
+- `pocketbase`: load/refresh `pb_auth`, normalize `locals.user`, append updated cookie. If `authRefresh()` fails, clear the PocketBase auth store, set `locals.user = null`, and write the cleared cookie back to the response.
 
 - [ ] **Step 5: Add provider-neutral auth endpoints**
 
@@ -329,6 +334,7 @@ Focus on pure route helpers or repository calls where full SvelteKit route tests
 - owner-only public toggle and voice update
 - gallery returns public records
 - word grammar route remains anonymous and survives cache write failure
+- preferences get/upsert preserves `defaultVoices` and other JSON-like fields in the same response shape used by existing analyze/settings/history pages
 
 - [ ] **Step 2: Run tests to verify they fail**
 
