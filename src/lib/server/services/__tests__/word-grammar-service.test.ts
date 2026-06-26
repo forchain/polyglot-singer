@@ -1,15 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { WordGrammarService } from '../word-grammar-service';
+import { analyzeWordGrammar } from '../ai-service';
+
+vi.mock('../ai-service', () => ({
+	analyzeWordGrammar: vi.fn()
+}));
 
 describe('WordGrammarService', () => {
 	beforeEach(() => {
 		// 清除缓存
 		WordGrammarService.clearCache();
+		WordGrammarService.setRepositoryForTesting(null);
+		vi.mocked(analyzeWordGrammar).mockReset();
 	});
 
 	afterEach(() => {
 		// 清理缓存
 		WordGrammarService.clearCache();
+		WordGrammarService.setRepositoryForTesting(null);
 	});
 
 	it('应该能够获取缓存统计信息', () => {
@@ -31,17 +39,43 @@ describe('WordGrammarService', () => {
 		expect(stats.size).toBe(0);
 	});
 
-	it('应该能够分析单词语法（模拟测试）', async () => {
-		// 这是一个集成测试，需要数据库和AI服务
-		// 在实际环境中，你可能需要模拟这些依赖
-		try {
-			const result = await WordGrammarService.analyzeWord('hello', 'en');
-			expect(result).toBeDefined();
-			expect(result.word).toBe('hello');
-			expect(result.language).toBe('en');
-		} catch (error) {
-			// 如果测试环境没有配置AI服务，这是预期的
-			console.log('测试跳过：需要配置AI服务');
-		}
+	it('应该能够从仓储缓存获取单词语法分析', async () => {
+		WordGrammarService.setRepositoryForTesting({
+			get: vi.fn(async () => ({
+				word: 'hello',
+				language: 'en',
+				analysisJson: '{"word":"hello"}'
+			})),
+			save: vi.fn()
+		});
+
+		const result = await WordGrammarService.analyzeWord('hello', 'en');
+
+		expect(result.word).toBe('hello');
+		expect(result.language).toBe('en');
+		expect(analyzeWordGrammar).not.toHaveBeenCalled();
 	});
-}); 
+
+	it('AI分析成功后即使缓存写入失败也返回结果', async () => {
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+		vi.mocked(analyzeWordGrammar).mockResolvedValue({
+			partOfSpeech: 'interjection',
+			grammarRules: [],
+			examples: []
+		});
+		WordGrammarService.setRepositoryForTesting({
+			get: vi.fn(async () => null),
+			save: vi.fn(async () => {
+				throw new Error('cache write failed');
+			})
+		});
+
+		const result = await WordGrammarService.analyzeWord('hello', 'en');
+
+		expect(result.word).toBe('hello');
+		expect(result.language).toBe('en');
+		expect(result.partOfSpeech).toBe('interjection');
+		expect(consoleError).toHaveBeenCalled();
+		consoleError.mockRestore();
+	});
+});

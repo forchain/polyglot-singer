@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/database/connection';
-import { eq, desc } from 'drizzle-orm';
+import { getBackendRepositories } from '$lib/server/backend';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -10,12 +9,6 @@ export const GET: RequestHandler = async ({ locals }) => {
 		return json({ success: false, error: 'Unauthorized' }, { status: 401 });
 	}
 	
-	const rows = await db.select({
-		id: schema.analyzedLyrics.id,
-		title: schema.analyzedLyrics.title,
-		artist: schema.analyzedLyrics.artist,
-		createdAt: schema.analyzedLyrics.createdAt,
-		isPublic: schema.analyzedLyrics.isPublic
-	}).from(schema.analyzedLyrics).where(eq(schema.analyzedLyrics.userId, user.id)).orderBy(desc(schema.analyzedLyrics.createdAt));
+	const rows = await (await getBackendRepositories()).analysis.listForUser(user.id);
 	return json({ success: true, history: rows });
-}; 
+};

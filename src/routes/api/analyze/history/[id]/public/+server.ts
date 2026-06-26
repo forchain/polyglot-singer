@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/database/connection';
-import { eq } from 'drizzle-orm';
+import { getBackendRepositories } from '$lib/server/backend';
 
 export const PATCH = async ({ params, request, locals }) => {
   const { id } = params;
@@ -9,9 +8,6 @@ export const PATCH = async ({ params, request, locals }) => {
     return json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
   const { isPublic } = await request.json();
-  // 只允许修改自己的作品
-  const updated = await db.update(schema.analyzedLyrics)
-    .set({ isPublic })
-    .where(eq(schema.analyzedLyrics.id, id), eq(schema.analyzedLyrics.userId, user.id));
+  await (await getBackendRepositories()).analysis.updatePublic(id, user.id, isPublic);
   return json({ success: true });
-}; 
+};

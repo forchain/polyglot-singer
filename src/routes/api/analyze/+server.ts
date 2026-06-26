@@ -2,8 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { analyzeToLyrics } from '$lib/server/services/ai-service.js';
 import { z } from 'zod';
-import { db, schema, databaseType } from '$lib/server/database/connection';
-import { randomUUID } from 'crypto';
+import { getBackendRepositories } from '$lib/server/backend';
 
 // Request validation schema
 const analyzeRequestSchema = z.object({
@@ -49,8 +48,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			validatedData.provider
 		);
 		
-		// 保存到analyzed_lyrics表
-		const insertData: any = {
+		const repositories = await getBackendRepositories();
+		const analysisId = await repositories.analysis.create({
 			userId: user.id,
 			title: validatedData.title || '',
 			artist: validatedData.artist || '',
@@ -59,21 +58,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			targetLanguage: validatedData.targetLanguage,
 			analysisJson: JSON.stringify(analysis),
 			voice: validatedData.voice || null
-		};
-
-		let analysisId: string | undefined;
-
-		if (databaseType === 'postgres' || databaseType === 'supabase') {
-			// Postgres/Supabase 支持 RETURNING
-			const inserted = await db.insert(schema.analyzedLyrics).values(insertData).returning({ id: schema.analyzedLyrics.id });
-			analysisId = inserted[0]?.id;
-		} else {
-			// 其他数据库
-			const id = randomUUID();
-			insertData.id = id;
-			await db.insert(schema.analyzedLyrics).values(insertData);
-			analysisId = id;
-		}
+		});
 
 		// Return successful response
 		return json({
