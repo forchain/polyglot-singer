@@ -6,6 +6,10 @@ Date: 2026-06-26
 
 Add PocketBase as a selectable backend provider while preserving the current Supabase auth plus Drizzle/Postgres path.
 
+The motivation is operational stability and future backend portability. Supabase can pause inactive projects, which increases maintenance for a personally hosted app. PocketBase can run on the user's private server for long-lived availability while offering a backend architecture that is close enough to Supabase to keep migration cost reasonable.
+
+This provider layer should also make future backend providers practical. For example, a later CloudBase provider could use the same project-level auth and repository contracts while exposing provider-specific advantages such as WeChat login or different pricing.
+
 The selected scope is:
 
 - `BACKEND_PROVIDER=postgres`: keep the existing Supabase auth and Drizzle/Postgres behavior.
