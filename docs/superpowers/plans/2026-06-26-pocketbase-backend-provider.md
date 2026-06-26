@@ -23,6 +23,7 @@
 - Modify `src/hooks.server.ts`: delegate auth session loading to selected provider.
 - Modify `src/app.d.ts`: use `AppUser` and add optional `pb` only if needed internally.
 - Modify auth routes/components: replace direct browser Supabase calls with provider-neutral endpoints/actions.
+- Modify `src/routes/profile/+page.svelte`: consume the normalized `AppUser` shape instead of Supabase/Postgres-specific field names.
 - Modify API routes under `src/routes/api/*`: use repositories instead of `db/schema` directly.
 - Modify `src/lib/server/services/word-grammar-service.ts`: use `wordGrammarRepository`.
 - Modify `src/lib/components/Navigation.svelte`: remove direct Supabase client dependency.
@@ -207,7 +208,7 @@ Define:
 
 - `users` auth collection fields `username`, `displayName`
 - `analyzed_lyrics` with rules from the spec
-- `user_preferences` with owner-only rules
+- `user_preferences` with a required unique `user` relation, owner-only rules, and fields `preferredSourceLanguage`, `preferredTargetLanguage`, `phoneticStyle`, `showPinyin`, `autoSave`, and `defaultVoices`
 - `word_grammar_analysis` with public read, superuser-only write, and unique `(word, language)` index
 
 - [ ] **Step 8: Run tests**
@@ -235,6 +236,7 @@ If there is no `package-lock.json`, omit it from `git add`.
 - Modify: `src/routes/auth/+page.svelte`
 - Modify: `src/routes/auth/logout/+page.svelte`
 - Modify: `src/lib/components/Navigation.svelte`
+- Modify: `src/routes/profile/+page.svelte`
 - Create: `src/routes/api/auth/login/+server.ts`
 - Create: `src/routes/api/auth/register/+server.ts`
 - Create: `src/routes/api/auth/logout/+server.ts`
@@ -294,7 +296,11 @@ Preserve current visible behavior:
 
 Remove direct Supabase browser call. Use passed layout `user` only, and call provider-neutral logout.
 
-- [ ] **Step 8: Run checks**
+- [ ] **Step 8: Update profile page**
+
+Replace `display_name` and `created_at` assumptions with the normalized `AppUser` fields available in layout/page data. If created date is not part of `AppUser`, either omit it or add `createdAt?: string | Date` to `AppUser` consistently across providers.
+
+- [ ] **Step 9: Run checks**
 
 Run:
 
@@ -305,10 +311,10 @@ npm run check
 
 Expected: pass.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add src/hooks.server.ts src/app.d.ts src/routes/+layout.server.ts src/routes/auth src/routes/api/auth src/lib/components/Navigation.svelte src/lib/server/backend/index.ts
+git add src/hooks.server.ts src/app.d.ts src/routes/+layout.server.ts src/routes/auth src/routes/api/auth src/lib/components/Navigation.svelte src/routes/profile/+page.svelte src/lib/server/backend/index.ts
 git commit -m "Use provider-neutral authentication"
 ```
 
@@ -398,6 +404,7 @@ Make scripts warn clearly when:
 - PocketBase provider is selected without `POCKETBASE_URL`
 - PocketBase migrations/cache writes need superuser credentials
 - Postgres provider is selected without existing DB/Supabase values
+- `scripts/start.js` runs in PocketBase mode: it must not run Drizzle `db:setup`; it should verify PocketBase config, explain how to run `pocketbase serve --migrationsDir=./pb_migrations`, and then start SvelteKit only when the provider config is usable.
 
 - [ ] **Step 3: Run docs/script checks**
 
@@ -452,7 +459,13 @@ Verify current auth/data flow is not broken if credentials are available.
 
 - [ ] **Step 5: Manual smoke for PocketBase provider**
 
-Run PocketBase locally with migrations, then:
+Run PocketBase locally with checked-in migrations:
+
+```bash
+pocketbase serve --migrationsDir=./pb_migrations
+```
+
+Then, in another shell:
 
 ```bash
 BACKEND_PROVIDER=pocketbase POCKETBASE_URL=http://127.0.0.1:8090 npm run dev
