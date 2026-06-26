@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../lib/styles/global.css';
 	import Navigation from '$lib/components/Navigation.svelte';
+	import CacheStatus from '$lib/components/CacheStatus.svelte';
 	import { page } from '$app/stores';
 	import type { LayoutData } from './$types';
 
@@ -19,6 +20,9 @@
 	<main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
 		<slot />
 	</main>
+	
+	<!-- 缓存状态指示器 -->
+	<CacheStatus />
 	
 	<!-- Footer -->
 	<footer class="bg-white border-t border-gray-200 mt-16">

@@ -45,7 +45,7 @@ async function togglePublic() {
 				<span class="text-xs text-gray-400">正在更新...</span>
 			{/if}
 		</div>
-		<LyricDisplay {analysis} bind:selectedVoice />
+		<LyricDisplay {analysis} bind:selectedVoice lyricId={analysis.id} />
 	{/if}
 </div>
 
