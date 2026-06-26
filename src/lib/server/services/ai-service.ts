@@ -122,6 +122,7 @@ export async function analyzeToLyrics(
 				}))
 			})),
 			summary: parsed.summary,
+			overallTranslation: parsed.overallTranslation,
 			title,
 			artist,
 			sourceLanguage,

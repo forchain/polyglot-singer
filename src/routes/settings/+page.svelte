@@ -49,8 +49,9 @@ onMount(async () => {
   }
 });
 
-function handleVoiceChange(lang, event) {
-  defaultVoices = { ...defaultVoices, [lang]: event.target.value };
+function handleVoiceChange(lang: string, event: Event) {
+  const target = event.target as HTMLSelectElement;
+  defaultVoices = { ...defaultVoices, [lang]: target.value };
 }
 
 async function saveSettings() {
