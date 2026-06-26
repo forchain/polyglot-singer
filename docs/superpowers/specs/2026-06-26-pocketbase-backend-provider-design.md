@@ -155,6 +155,10 @@ Fields:
 - `examples`: json
 - `analysisJson`: json, required
 
+Indexes:
+
+- Unique index on normalized `(word, language)` so the collection behaves as a cache and repositories can implement create-or-update deterministically.
+
 Rules:
 
 - list/view: public read, preserving the current anonymous `/api/word/grammar` behavior for public analysis pages.
@@ -191,6 +195,7 @@ Preferences and word grammar:
 2. `/api/word/grammar` remains available to anonymous users, matching current behavior.
 3. Word grammar service uses `wordGrammarRepository` for cache reads and writes.
 4. In PocketBase mode, cache reads may use a public/read-capable client, while cache writes use the server-only superuser client.
+5. Cache write failure, including missing PocketBase superuser credentials, must not fail `/api/word/grammar` after AI analysis succeeds. Return the analysis, log the cache persistence error, and skip persistence for that request.
 
 ## Error Handling
 
@@ -204,7 +209,7 @@ Provider-specific errors should be translated into project-level API errors:
 
 PocketBase auth refresh failure should clear auth state and treat the request as unauthenticated.
 
-Missing PocketBase superuser credentials should only block server-only operations that require them, such as collection migrations or word grammar cache writes. User login and normal reads should still report their own provider configuration errors clearly.
+Missing PocketBase superuser credentials should only block server-only operations that strictly require them, such as collection migrations. For word grammar cache writes, missing credentials should degrade to no persistence for that request while still returning the AI analysis if analysis succeeds. User login and normal reads should still report their own provider configuration errors clearly.
 
 `analysisJson` and other JSON-like fields must be serialized and deserialized through shared helpers so Postgres text fields and PocketBase json fields produce consistent route responses.
 
@@ -224,6 +229,7 @@ Route-level tests:
 - Public toggle and voice update require ownership.
 - Preferences get/upsert works with the normalized user id.
 - `/api/word/grammar` remains anonymous-accessible and can read/write cache through the repository.
+- `/api/word/grammar` returns successful AI analysis even when cache persistence fails.
 - `/api/gallery` returns public records consistently for both providers.
 
 Manual acceptance:
