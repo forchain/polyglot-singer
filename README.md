@@ -13,21 +13,25 @@ A multilingual song lyrics analysis and pronunciation learning application built
 - 💾 **History Tracking**: Save and revisit your analyzed lyrics
 - 🎯 **Two-step Analysis**: Overall translation + detailed word-by-word breakdown
 
-## Database Support
+## Backend Provider Support
 
-The application supports two database modes:
+The application supports selectable backend providers:
 
-### SQLite (Default - Local Development)
-- Perfect for local development and testing
-- No external dependencies required
-- Automatic setup with `npm run db:setup`
+### PostgreSQL/Supabase (Default)
+- Uses Supabase auth with Drizzle/Postgres persistence
+- Recommended when deploying to managed Postgres platforms
+- Existing production path for the app
 
-### PostgreSQL/Supabase (Production Deployment)
-- Recommended for production deployments
-- Compatible with Vercel and other cloud platforms
-- Easy setup with Supabase
+### PocketBase
+- Uses PocketBase auth and PocketBase collections
+- Good for long-running self-hosted deployments on a private server
+- Run PocketBase with the checked-in migrations:
 
-See [docs/SUPABASE_SETUP.md](./docs/SUPABASE_SETUP.md) for detailed setup instructions.
+```bash
+pocketbase serve --migrationsDir=./pb_migrations
+```
+
+Set `BACKEND_PROVIDER=pocketbase` and `POCKETBASE_URL=http://127.0.0.1:8090` in `.env`.
 
 ## Quick Start
 
@@ -67,13 +71,20 @@ cp env.example .env
 Edit `.env` with your configuration:
 
 ```bash
-# Database (choose one)
-DATABASE_TYPE=sqlite              # For local development
-DATABASE_URL=sqlite:dev.db
+# Backend provider
+BACKEND_PROVIDER=postgres
 
-# Or for production with Supabase:
-# DATABASE_TYPE=postgres
-# DATABASE_URL=postgresql://user:password@host:port/database
+# Supabase/Postgres backend:
+DATABASE_TYPE=postgres
+DATABASE_URL=postgresql://user:password@host:port/database
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+
+# Or PocketBase backend:
+# BACKEND_PROVIDER=pocketbase
+# POCKETBASE_URL=http://127.0.0.1:8090
+# POCKETBASE_SUPERUSER_EMAIL=admin@example.com
+# POCKETBASE_SUPERUSER_PASSWORD=your-password
 
 # AI Provider (Doubao is default)
 AI_PROVIDER=doubao

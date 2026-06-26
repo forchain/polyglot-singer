@@ -50,8 +50,20 @@ OPENAI_MODEL_DETECTION=gpt-4.1-nano
 # CUSTOM_AI_MODEL=your-model-name
 # CUSTOM_AI_API_KEY=your_api_key
 
-# Database Configuration
-DATABASE_URL=sqlite:dev.db
+# Backend Provider
+BACKEND_PROVIDER=postgres
+
+# Supabase/Postgres backend
+DATABASE_TYPE=postgres
+DATABASE_URL=postgresql://user:password@host:port/database
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+
+# PocketBase backend
+# BACKEND_PROVIDER=pocketbase
+# POCKETBASE_URL=http://127.0.0.1:8090
+# POCKETBASE_SUPERUSER_EMAIL=admin@example.com
+# POCKETBASE_SUPERUSER_PASSWORD=your-pocketbase-superuser-password
 
 # Application Configuration
 PUBLIC_APP_NAME=Polyglot Singer
@@ -61,13 +73,19 @@ PUBLIC_APP_URL=http://localhost:5173
 SESSION_SECRET=your_random_session_secret_here_minimum_32_characters
 ```
 
-### 3. Database Setup
+### 3. Backend Setup
 
-Generate and run database migrations:
+For Supabase/Postgres, generate and run database migrations:
 
 ```bash
 npm run db:generate
 npm run db:migrate
+```
+
+For PocketBase, run the PocketBase server with the checked-in migrations:
+
+```bash
+pocketbase serve --migrationsDir=./pb_migrations
 ```
 
 ### 4. Start Development Server

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'child_process';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 // 颜色输出函数
@@ -56,6 +56,24 @@ function checkFileExists(filePath) {
 	return existsSync(filePath);
 }
 
+function parseEnvFile(filePath) {
+	if (!existsSync(filePath)) {
+		return {};
+	}
+
+	const vars = {};
+	const content = readFileSync(filePath, 'utf8');
+	for (const rawLine of content.split('\n')) {
+		const line = rawLine.trim();
+		if (!line || line.startsWith('#')) continue;
+		const equalIndex = line.indexOf('=');
+		if (equalIndex > 0) {
+			vars[line.slice(0, equalIndex).trim()] = line.slice(equalIndex + 1).trim();
+		}
+	}
+	return vars;
+}
+
 // 主函数
 async function main() {
 	const projectRoot = process.cwd();
@@ -77,15 +95,27 @@ async function main() {
 			process.exit(1);
 		}
 		
-		// 3. 检查数据库文件
-		logBold('\n📋 步骤 2: 检查数据库', 'cyan');
-		const dbPath = join(projectRoot, 'dev.db');
-		
-		if (!checkFileExists(dbPath)) {
-			logBold('\n🗄️  数据库文件不存在，正在设置数据库...', 'yellow');
-			await runCommand('npm', ['run', 'db:setup'], '数据库设置');
+		// 3. 检查后端 Provider
+		logBold('\n📋 步骤 2: 检查后端 Provider', 'cyan');
+		const envVars = parseEnvFile(envPath);
+		const backendProvider = envVars.BACKEND_PROVIDER || 'postgres';
+
+		if (backendProvider === 'pocketbase') {
+			if (!envVars.POCKETBASE_URL) {
+				logBold('\n❌ BACKEND_PROVIDER=pocketbase 需要配置 POCKETBASE_URL', 'red');
+				process.exit(1);
+			}
+			logBold('✅ PocketBase Provider 已配置', 'green');
+			log('请确认 PocketBase 已在另一个终端运行：', 'blue');
+			log('pocketbase serve --migrationsDir=./pb_migrations', 'blue');
 		} else {
-			logBold('✅ 数据库文件已存在', 'green');
+			const dbPath = join(projectRoot, 'dev.db');
+			if (!checkFileExists(dbPath)) {
+				logBold('\n🗄️  数据库文件不存在，正在设置数据库...', 'yellow');
+				await runCommand('npm', ['run', 'db:setup'], '数据库设置');
+			} else {
+				logBold('✅ 数据库文件已存在', 'green');
+			}
 		}
 		
 		// 4. 检查依赖
