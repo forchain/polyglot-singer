@@ -30,6 +30,8 @@ Add provider configuration:
 ```env
 BACKEND_PROVIDER=postgres
 POCKETBASE_URL=http://127.0.0.1:8090
+POCKETBASE_SUPERUSER_EMAIL=
+POCKETBASE_SUPERUSER_PASSWORD=
 ```
 
 `BACKEND_PROVIDER` accepts:
@@ -38,6 +40,8 @@ POCKETBASE_URL=http://127.0.0.1:8090
 - `pocketbase`: PocketBase auth plus PocketBase collections.
 
 When `BACKEND_PROVIDER=pocketbase`, `POCKETBASE_URL` is required. Missing provider-specific configuration should fail with a clear error at startup or first backend access.
+
+`POCKETBASE_SUPERUSER_EMAIL` and `POCKETBASE_SUPERUSER_PASSWORD` are required for server-only maintenance operations in PocketBase mode, including collection setup/migrations and writing shared word grammar cache records. They must never be exposed to browser code.
 
 ## Architecture
 
@@ -114,7 +118,7 @@ Fields:
 - `lyrics`: text, required
 - `sourceLanguage`: text, required
 - `targetLanguage`: text, required
-- `analysisJson`: json or text, required
+- `analysisJson`: json, required
 - `voice`: text
 - `isPublic`: bool, default `false`
 
@@ -134,7 +138,7 @@ Fields:
 - `phoneticStyle`: text
 - `showPinyin`: bool
 - `autoSave`: bool
-- `defaultVoices`: json or text
+- `defaultVoices`: json
 
 Rules:
 
@@ -147,14 +151,16 @@ Fields:
 - `word`: text, required
 - `language`: text, required
 - `partOfSpeech`: text
-- `grammarRules`: json or text
-- `examples`: json or text
-- `analysisJson`: json or text, required
+- `grammarRules`: json
+- `examples`: json
+- `analysisJson`: json, required
 
 Rules:
 
-- Read: authenticated users may read cached entries.
-- Create/update: server-side only through trusted backend code, using PocketBase superuser/admin credentials or a protected server-only mechanism.
+- list/view: public read, preserving the current anonymous `/api/word/grammar` behavior for public analysis pages.
+- create/update/delete: superuser only. The normal client SDK path must not be able to write these records directly.
+
+The PocketBase adapter will use a separate server-only superuser PocketBase client for cache writes. Normal request-scoped user clients are used for user-owned data such as analyzed lyrics and preferences.
 
 ## Data Flow
 
@@ -182,7 +188,9 @@ History and gallery:
 Preferences and word grammar:
 
 1. Preference routes call `preferencesRepository.get(...)` and `preferencesRepository.upsert(...)`.
-2. Word grammar service uses `wordGrammarRepository` for cache reads and writes.
+2. `/api/word/grammar` remains available to anonymous users, matching current behavior.
+3. Word grammar service uses `wordGrammarRepository` for cache reads and writes.
+4. In PocketBase mode, cache reads may use a public/read-capable client, while cache writes use the server-only superuser client.
 
 ## Error Handling
 
@@ -196,7 +204,9 @@ Provider-specific errors should be translated into project-level API errors:
 
 PocketBase auth refresh failure should clear auth state and treat the request as unauthenticated.
 
-`analysisJson` and other JSON-like fields must be serialized and deserialized through shared helpers so Postgres text fields and PocketBase json/text fields produce consistent route responses.
+Missing PocketBase superuser credentials should only block server-only operations that require them, such as collection migrations or word grammar cache writes. User login and normal reads should still report their own provider configuration errors clearly.
+
+`analysisJson` and other JSON-like fields must be serialized and deserialized through shared helpers so Postgres text fields and PocketBase json fields produce consistent route responses.
 
 ## Testing
 
@@ -213,6 +223,8 @@ Route-level tests:
 - `/api/analyze/history/[id]` allows public records and owner private records, but hides private records from others.
 - Public toggle and voice update require ownership.
 - Preferences get/upsert works with the normalized user id.
+- `/api/word/grammar` remains anonymous-accessible and can read/write cache through the repository.
+- `/api/gallery` returns public records consistently for both providers.
 
 Manual acceptance:
 
@@ -225,6 +237,7 @@ Manual acceptance:
   - History and detail reads work.
   - Private records are hidden from other users.
   - Public records appear in gallery.
+  - Anonymous users can request word grammar analysis.
   - Preferences persist.
   - Logout clears the active session.
 
@@ -232,7 +245,7 @@ Manual acceptance:
 
 1. Add provider interfaces and normalized user type.
 2. Move current Drizzle/Supabase behavior behind the `postgres` adapter.
-3. Add PocketBase adapter and collection setup documentation or migrations.
+3. Add PocketBase adapter and checked-in PocketBase JavaScript migrations for required collections and rules.
 4. Update API routes to use repositories.
 5. Update auth UI and navigation to use provider-neutral endpoints/state.
 6. Add tests and update setup documentation.
