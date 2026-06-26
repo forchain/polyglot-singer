@@ -4,11 +4,12 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			user?: import('@supabase/supabase-js').User | null;
+			user?: import('$lib/types/auth').AppUser | null;
 			userSyncError?: string;
+			pb?: import('pocketbase').default;
 		}
 		interface PageData {
-			user?: import('@supabase/supabase-js').User | null;
+			user?: import('$lib/types/auth').AppUser | null;
 		}
 		// interface PageState {}
 		// interface Platform {}
