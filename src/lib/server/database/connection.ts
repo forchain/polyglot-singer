@@ -1,6 +1,5 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { DATABASE_URL } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 
 // Import PostgreSQL schema
@@ -12,8 +11,16 @@ const dbType = env.DATABASE_TYPE || 'postgres';
 let db: any;
 let pg: postgres.Sql | null = null;
 
+function resolveConnectionString(databaseUrl?: string): string {
+	if (!databaseUrl || databaseUrl.includes('user:password@host:port')) {
+		return 'postgresql://localhost:5432/polyglot_singer';
+	}
+
+	return databaseUrl;
+}
+
 // PostgreSQL/Supabase connection
-const connectionString = DATABASE_URL || 'postgresql://localhost:5432/polyglot_singer';
+const connectionString = resolveConnectionString(env.DATABASE_URL);
 pg = postgres(connectionString);
 db = drizzle(pg, { schema });
 
