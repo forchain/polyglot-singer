@@ -70,24 +70,24 @@ pocketbase serve --migrationsDir=./pb_migrations
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start the Vite dev server |
-| `npm run dev:lan` | Start the dev server on `0.0.0.0` |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview the production build |
-| `npm run check` | Run Svelte type checking |
-| `npm run lint` | Run Prettier and ESLint checks |
-| `npm run format` | Format the codebase |
-| `npm run test` | Run unit tests with Vitest |
-| `npm run test:integration` | Run Playwright integration tests |
-| `npm run db:setup` | Generate and apply database migrations |
-| `npm run db:generate` | Generate Drizzle migrations |
-| `npm run db:migrate` | Apply Drizzle migrations |
-| `npm run db:studio` | Open Drizzle Studio |
-| `npm run db:test` | Test the database connection |
-| `npm run env:check` | Check `.env` for required variables |
-| `npm run start` | Run startup checks and launch the app |
+| Command                    | Description                            |
+| -------------------------- | -------------------------------------- |
+| `npm run dev`              | Start the Vite dev server              |
+| `npm run dev:lan`          | Start the dev server on `0.0.0.0`      |
+| `npm run build`            | Build for production                   |
+| `npm run preview`          | Preview the production build           |
+| `npm run check`            | Run Svelte type checking               |
+| `npm run lint`             | Run Prettier and ESLint checks         |
+| `npm run format`           | Format the codebase                    |
+| `npm run test`             | Run unit tests with Vitest             |
+| `npm run test:integration` | Run Playwright integration tests       |
+| `npm run db:setup`         | Generate and apply database migrations |
+| `npm run db:generate`      | Generate Drizzle migrations            |
+| `npm run db:migrate`       | Apply Drizzle migrations               |
+| `npm run db:studio`        | Open Drizzle Studio                    |
+| `npm run db:test`          | Test the database connection           |
+| `npm run env:check`        | Check `.env` for required variables    |
+| `npm run start`            | Run startup checks and launch the app  |
 
 ## Notes
 
