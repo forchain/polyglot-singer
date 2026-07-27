@@ -1,0 +1,37 @@
+services:
+  pocketbase:
+    image: spectado/pocketbase:latest
+    container_name: polyglot-pocketbase
+    restart: unless-stopped
+    entrypoint: ["/usr/local/bin/pocketbase"]
+    command: ["serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations"]
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_migrations:/pb/pb_migrations:ro
+      - pb_data:/pb/pb_data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: polyglot-app
+    restart: unless-stopped
+    ports:
+      - "5173:3000"
+    env_file:
+      - .env
+    environment:
+      - BACKEND_PROVIDER=pocketbase
+      - POCKETBASE_URL=http://pocketbase:8090
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+
+volumes:
+  pb_data:

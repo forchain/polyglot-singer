@@ -1,20 +1,11 @@
 // AI Service Configuration
 // Supports multiple OpenAI-compatible providers
 import type { AIProvider } from '$lib/types/ai-providers.js';
-import {
-	DOUBAO_API_KEY,
-	DOUBAO_MODEL,
-	DOUBAO_MODEL_DETECTION,
-	DEEPSEEK_API_KEY,
-	DEEPSEEK_MODEL,
-	DEEPSEEK_MODEL_DETECTION
-} from '$env/static/private';
-
-
+import { env as privateEnv } from '$env/dynamic/private';
 
 export interface AIConfig {
 	provider: AIProvider;
-	apiKey: string;
+	key: string;
 	baseURL?: string;
 	model: string;
 	detectionModel?: string;
@@ -25,11 +16,11 @@ export interface AIConfig {
 
 // Default configuration
 export const defaultConfig: AIConfig = {
-	provider: 'doubao',
-	apiKey: DOUBAO_API_KEY || '',
-	baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
-	model: DOUBAO_MODEL || 'doubao-seed-1-6-flash-250615',
-	detectionModel: DOUBAO_MODEL_DETECTION || 'doubao-seed-1-6-flash-250615',
+	provider: 'kimi',
+	key: privateEnv.KIMI_API_KEY || '',
+	baseURL: 'https://api.kimi.com/coding/v1',
+	model: privateEnv.KIMI_MODEL || 'kimi-for-coding',
+	detectionModel: privateEnv.KIMI_MODEL_DETECTION || 'kimi-for-coding',
 	timeout: 300000,
 	maxTokens: 4000,
 	temperature: 0.3
@@ -73,63 +64,73 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 		model: 'llama3.2:3b',
 		detectionModel: 'llama3.2:3b'
 	},
-	// Custom providers can be added here
 	custom: {
 		provider: 'custom'
+	},
+	kimi: {
+		provider: 'kimi',
+		baseURL: 'https://api.kimi.com/coding/v1',
+		model: 'kimi-for-coding',
+		detectionModel: 'kimi-for-coding'
 	}
 };
 
 // Get configuration for a specific provider
 export function getAIConfig(provider?: string): AIConfig {
-	const providerName = provider || 'doubao';
-	const baseConfig = providerConfigs[providerName] || providerConfigs.doubao;
+	const providerName = provider || privateEnv.AI_PROVIDER || 'kimi';
+	const baseConfig = providerConfigs[providerName] || providerConfigs.kimi;
 
 	if (providerName === 'doubao') {
 		return {
 			...defaultConfig,
 			...baseConfig,
-			apiKey: DOUBAO_API_KEY || '',
+			key: privateEnv.DOUBAO_API_KEY || '',
 			baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
-			model: DOUBAO_MODEL || baseConfig.model || defaultConfig.model,
-			detectionModel: DOUBAO_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+			model: privateEnv.DOUBAO_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: privateEnv.DOUBAO_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
 		};
 	} else if (providerName === 'deepseek') {
 		return {
 			...defaultConfig,
 			...baseConfig,
-			apiKey: DEEPSEEK_API_KEY || '',
+			key: privateEnv.DEEPSEEK_API_KEY || '',
 			baseURL: 'https://api.deepseek.com/v1',
-			model: DEEPSEEK_MODEL || baseConfig.model || defaultConfig.model,
-			detectionModel: DEEPSEEK_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+			model: privateEnv.DEEPSEEK_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: privateEnv.DEEPSEEK_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
 		};
 	} else if (providerName === 'openai') {
-		// For OpenAI, we'll use environment variables if available, otherwise use defaults
-		const openaiApiKey = process.env.OPENAI_API_KEY || '';
-		const openaiModel = process.env.OPENAI_MODEL || baseConfig.model || defaultConfig.model;
-		const openaiDetectionModel = process.env.OPENAI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel;
-		
+		const openaiApiKey = privateEnv.OPENAI_API_KEY || '';
+		const openaiModel = privateEnv.OPENAI_MODEL || baseConfig.model || defaultConfig.model;
+		const openaiDetectionModel = privateEnv.OPENAI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel;
 		return {
 			...defaultConfig,
 			...baseConfig,
-			apiKey: openaiApiKey,
+			key: openaiApiKey,
 			baseURL: 'https://api.openai.com/v1',
 			model: openaiModel,
 			detectionModel: openaiDetectionModel
 		};
 	} else if (providerName === 'custom') {
-		// For custom providers, we'll use environment variables if available, otherwise use defaults
-		const customApiKey = process.env.CUSTOM_AI_API_KEY || '';
-		const customBaseUrl = process.env.CUSTOM_AI_BASE_URL || baseConfig.baseURL || defaultConfig.baseURL;
-		const customModel = process.env.CUSTOM_AI_MODEL || baseConfig.model || defaultConfig.model;
-		const customDetectionModel = process.env.CUSTOM_MODEL_DETECTION || customModel || baseConfig.detectionModel || defaultConfig.detectionModel;
-		
+		const customApiKey = privateEnv.CUSTOM_AI_API_KEY || '';
+		const customBaseUrl = privateEnv.CUSTOM_AI_BASE_URL || baseConfig.baseURL || defaultConfig.baseURL;
+		const customModel = privateEnv.CUSTOM_AI_MODEL || baseConfig.model || defaultConfig.model;
+		const customDetectionModel = privateEnv.CUSTOM_MODEL_DETECTION || customModel || baseConfig.detectionModel || defaultConfig.detectionModel;
 		return {
 			...defaultConfig,
 			...baseConfig,
-			apiKey: customApiKey,
+			key: customApiKey,
 			baseURL: customBaseUrl,
 			model: customModel,
 			detectionModel: customDetectionModel
+		};
+	} else if (providerName === 'kimi') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			key: privateEnv.KIMI_API_KEY || '',
+			baseURL: 'https://api.kimi.com/coding/v1',
+			model: privateEnv.KIMI_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: privateEnv.KIMI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
 		};
 	} else {
 		return {
@@ -141,7 +142,7 @@ export function getAIConfig(provider?: string): AIConfig {
 
 // Validate configuration
 export function validateAIConfig(config: AIConfig): boolean {
-	if (!config.apiKey) {
+	if (!config.key) {
 		console.error('AI API key is required');
 		return false;
 	}
@@ -159,4 +160,4 @@ export function validateAIConfig(config: AIConfig): boolean {
 // Get supported providers
 export function getSupportedProviders(): AIProvider[] {
 	return Object.keys(providerConfigs) as AIProvider[];
-} 
+}

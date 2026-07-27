@@ -68,6 +68,42 @@ Run PocketBase in another terminal:
 pocketbase serve --migrationsDir=./pb_migrations
 ```
 
+## Docker Compose (local deployment)
+
+Build and run both the SvelteKit app and PocketBase together:
+
+```bash
+cp env.example .env
+# Edit .env and add at least SESSION_SECRET, KIMI_API_KEY or MINIMAX_API_KEY, and AI_PROVIDER
+
+npm install
+docker compose up -d --build
+```
+
+This will:
+
+1. Build the SvelteKit production image with `@sveltejs/adapter-node`.
+2. Start PocketBase with `pb_migrations` applied automatically.
+3. Start the app on http://localhost:5173 with PocketBase available at http://localhost:8090.
+
+If PocketBase is being initialized for the first time, create a superuser with:
+
+```bash
+docker compose exec pocketbase pocketbase superuser upsert admin@example.com yourpassword
+```
+
+Stop everything:
+
+```bash
+docker compose down
+```
+
+### Notes
+
+- `.env` is never committed; keep your API keys there.
+- `pb_data/` is stored in a Docker volume and is also ignored by git.
+- The `build/` directory is the local production build output and is ignored by git.
+
 ## Scripts
 
 | Command                    | Description                            |

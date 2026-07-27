@@ -1,5 +1,5 @@
 // Client-side AI provider types and configurations
-export type AIProvider = 'doubao' | 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom';
+export type AIProvider = 'doubao' | 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom' | 'kimi';
 
 export const providerDisplayNames: Record<AIProvider, string> = {
 	doubao: 'Doubao (豆包)',
@@ -8,10 +8,11 @@ export const providerDisplayNames: Record<AIProvider, string> = {
 	anthropic: 'Anthropic (Claude)',
 	google: 'Google (Gemini)',
 	local: 'Local (Ollama)',
-	custom: 'Custom Provider'
+	custom: 'Custom Provider',
+	kimi: 'Kimi (Moonshot)'
 };
 
-export const supportedProviders: AIProvider[] = ['doubao', 'deepseek', 'openai', 'anthropic', 'google', 'local', 'custom'];
+export const supportedProviders: AIProvider[] = ['doubao', 'deepseek', 'openai', 'anthropic', 'google', 'local', 'custom', 'kimi'];
 
 export interface ProviderInfo {
 	name: string;
@@ -60,5 +61,11 @@ export const providerInfo: Record<AIProvider, ProviderInfo> = {
 		name: 'Custom Provider',
 		description: 'Your own OpenAI-compatible API endpoint',
 		requiresApiKey: true
+	},
+	kimi: {
+		name: 'Kimi (Moonshot)',
+		description: 'Kimi models from Moonshot AI (Anthropic Messages compatible)',
+		requiresApiKey: true,
+		configUrl: 'https://platform.moonshot.cn/console/api-keys'
 	}
 }; 
