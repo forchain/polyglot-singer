@@ -1,0 +1,22 @@
+.DS_Store
+node_modules
+.svelte-kit
+package-lock.json
+.env
+.env.*
+!.env.example
+.vercel
+build
+pb_data
+*.db
+*.log
+.vscode
+.idea
+.github
+.playwright
+
+# Test / dev artifacts
+.coverage
+test-results
+.env.local
+.env.backup

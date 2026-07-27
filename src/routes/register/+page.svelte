@@ -1,4 +1,8 @@
 <script>
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  goto('/auth');
-</script> 
+
+  onMount(() => {
+    goto('/auth');
+  });
+</script>

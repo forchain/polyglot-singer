@@ -1,23 +1,43 @@
 import OpenAI from 'openai';
 import type { LyricAnalysis, WordAnalysis, LineAnalysis } from '$lib/types/lyric.js';
 import { getAIConfig, validateAIConfig, type AIConfig } from './ai-config.js';
+import { kimiChat } from './kimi-provider.js';
 import { restoreLyricAnalysis } from './restoreLyricAnalysis';
 import { jsonrepair } from 'jsonrepair';
 
-// Get AI configuration
-const aiConfig = getAIConfig();
-
-// Validate configuration
-if (!validateAIConfig(aiConfig)) {
-	throw new Error('Invalid AI configuration. Please check your environment variables.');
+// Get AI configuration (runtime only; no validation at module load to keep Docker builds safe)
+let aiConfig: ReturnType<typeof getAIConfig> | null = null;
+function getRuntimeAIConfig() {
+	if (!aiConfig) {
+		aiConfig = getAIConfig();
+		if (!validateAIConfig(aiConfig)) {
+			throw new Error('Invalid AI configuration. Please check your environment variables.');
+		}
+	}
+	return aiConfig;
 }
 
-// Initialize OpenAI-compatible client
-const openai = new OpenAI({
-	apiKey: aiConfig.apiKey,
-	baseURL: aiConfig.baseURL,
-	timeout: aiConfig.timeout
-});
+async function chatCompletion(
+	config: AIConfig,
+	messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
+	options: { temperature?: number; maxTokens?: number } = {}
+): Promise<string> {
+	if (config.provider === 'kimi') {
+		return kimiChat(config, messages, options);
+	}
+	const client = new OpenAI({
+		apiKey: config.key,
+		baseURL: config.baseURL,
+		timeout: config.timeout
+	});
+	const completion = await client.chat.completions.create({
+		model: config.model,
+		messages,
+		temperature: options.temperature ?? config.temperature,
+		max_tokens: options.maxTokens ?? config.maxTokens
+	});
+	return completion.choices[0]?.message?.content || '';
+}
 
 /**
  * Analyze lyrics using OpenAI API
@@ -42,11 +62,7 @@ export async function analyzeToLyrics(
 
 		// OpenAI client 初始化
 		const t1 = Date.now();
-		const client = new OpenAI({
-			apiKey: aiConfig.apiKey,
-			baseURL: aiConfig.baseURL,
-			timeout: aiConfig.timeout
-		});
+		const _unusedT1 = t1; // silence unused warning if we ever remove timing
 
 		// 直接用原始歌词行
 		const lines = lyrics.split(/\r?\n/).map(line => line.trim());
@@ -57,26 +73,23 @@ export async function analyzeToLyrics(
 
 		// 发起大模型请求
 		const t4 = Date.now();
-		const completion = await client.chat.completions.create({
-			model: aiConfig.model,
-			messages: [
-				{
-					role: 'system',
-					content: 'You are a professional language teacher and linguist. Analyze song lyrics word by word, providing accurate translations and phonetic transcriptions. Focus on the contextual meaning within the song, not dictionary definitions.'
-				},
-				{
-					role: 'user',
-					content: prompt
-				}
-			],
+		const response = await chatCompletion(aiConfig, [
+			{
+				role: 'system',
+				content: 'You are a professional language teacher and linguist. Analyze song lyrics word by word, providing accurate translations and phonetic transcriptions. Focus on the contextual meaning within the song, not dictionary definitions.'
+			},
+			{
+				role: 'user',
+				content: prompt
+			}
+		], {
 			temperature: aiConfig.temperature,
-			max_tokens: aiConfig.maxTokens
+			maxTokens: aiConfig.maxTokens
 		});
 
 		// 收到大模型响应
 		const t5 = Date.now();
-		const response = completion.choices[0]?.message?.content;
-		console.log(`[AI] [${Date.now() - startTime}ms] model response received, length=${response?.length}`);
+		console.log(`[AI] [${Date.now() - startTime}ms] model response received, length=${response.length}`);
 		console.log('[AI] Model raw response:', response);
 		if (!response) throw new Error('No response from AI');
 
@@ -195,23 +208,21 @@ function parseAIResponse(
  */
 export async function detectLanguage(text: string): Promise<string> {
 	try {
-		const completion = await openai.chat.completions.create({
-			model: aiConfig.detectionModel || aiConfig.model,
-			messages: [
-				{
-					role: 'system',
-					content: 'Detect the language of the given text. Respond with only the 2-letter language code (e.g., "en" for English, "zh" for Chinese, "es" for Spanish).'
-				},
-				{
-					role: 'user',
-					content: text.substring(0, 500) // First 500 chars should be enough
-				}
-			],
+		const response = await chatCompletion(getRuntimeAIConfig(), [
+			{
+				role: 'system',
+				content: 'Detect the language of the given text. Respond with only the 2-letter language code (e.g., "en" for English, "zh" for Chinese, "es" for Spanish).'
+			},
+			{
+				role: 'user',
+				content: text.substring(0, 500) // First 500 chars should be enough
+			}
+		], {
 			temperature: 0.1,
-			max_tokens: 10
+			maxTokens: 10
 		});
 
-		const detected = completion.choices[0]?.message?.content?.trim().toLowerCase();
+		const detected = response.trim().toLowerCase();
 		return detected || 'en'; // Default to English
 
 	} catch (error) {
@@ -343,11 +354,6 @@ export async function analyzeWordGrammar(word: string, language: string): Promis
 }> {
 	try {
 		const aiConfig = getAIConfig();
-		const client = new OpenAI({
-			apiKey: aiConfig.apiKey,
-			baseURL: aiConfig.baseURL,
-			timeout: aiConfig.timeout
-		});
 
 		const languageNames = {
 			en: 'English',
@@ -385,23 +391,20 @@ Return a JSON object with the following structure:
 
 IMPORTANT: All content must be in ${langName}. Return ONLY the JSON object, no extra text.`;
 
-		const completion = await client.chat.completions.create({
-			model: aiConfig.model,
-			messages: [
-				{
-					role: 'system',
-					content: 'You are a professional linguist and grammar expert. Provide accurate grammar analysis for words in various languages.'
-				},
-				{
-					role: 'user',
-					content: prompt
-				}
-			],
+		const response = await chatCompletion(aiConfig, [
+			{
+				role: 'system',
+				content: 'You are a professional linguist and grammar expert. Provide accurate grammar analysis for words in various languages.'
+			},
+			{
+				role: 'user',
+				content: prompt
+			}
+		], {
 			temperature: 0.3,
-			max_tokens: 1000
+			maxTokens: 1000
 		});
 
-		const response = completion.choices[0]?.message?.content;
 		if (!response) {
 			throw new Error('No response from AI');
 		}
