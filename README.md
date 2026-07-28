@@ -77,7 +77,7 @@ cp env.example .env
 # Edit .env and add at least SESSION_SECRET and MINIMAX_API_KEY
 
 npm install
-docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+docker compose -f docker-compose.yaml -f docker-compose.local.yml up -d --build
 ```
 
 This will:
@@ -86,7 +86,7 @@ This will:
 2. Start PocketBase with `pb_migrations` applied automatically.
 3. Start the app on http://localhost:5173 with PocketBase available at http://localhost:8090.
 
-For Coolify, deploy `docker-compose.yml` as a Compose resource on the remote server and assign `https://sing.spike.network` to the `app` service. Coolify's Traefik proxy routes the domain to port 3000 and manages HTTPS.
+For Coolify, deploy `docker-compose.yaml` as a Compose resource on the remote server and assign `https://sing.spike.network` to the `app` service. Coolify's Traefik proxy routes the domain to port 3000 and manages HTTPS.
 
 If PocketBase is being initialized for the first time, create a superuser with:
 
