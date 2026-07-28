@@ -20,6 +20,16 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.polyglot-singer-http.entrypoints=http
+      - traefik.http.routers.polyglot-singer-http.rule=Host(`sing.spike.network`)
+      - traefik.http.routers.polyglot-singer-http.middlewares=redirect-to-https
+      - traefik.http.routers.polyglot-singer-https.entrypoints=https
+      - traefik.http.routers.polyglot-singer-https.rule=Host(`sing.spike.network`)
+      - traefik.http.routers.polyglot-singer-https.tls=true
+      - traefik.http.routers.polyglot-singer-https.tls.certresolver=letsencrypt
+      - traefik.http.services.polyglot-singer.loadbalancer.server.port=3000
     expose:
       - "3000"
     env_file:
