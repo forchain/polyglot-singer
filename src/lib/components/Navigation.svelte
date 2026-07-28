@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { supabase } from '$lib/supabaseClient';
 	import { goto } from '$app/navigation';
-	import type { User } from '$lib/types/user.js';
+	import type { AppUser } from '$lib/types/auth';
 	
-	export let user: User | null = null;
+	export let user: AppUser | null = null;
 	export let currentPath: string = '/';
 	
 	let showMobileMenu = false;
@@ -18,10 +16,6 @@
 		showUserMenu = !showUserMenu;
 	}
 	
-	function handleSignOut() {
-		goto('/auth/signout');
-	}
-	
 	// Close menus when clicking outside
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
@@ -33,13 +27,8 @@
 		}
 	}
 
-	onMount(async () => {
-		const { data } = await supabase.auth.getUser();
-		user = data.user;
-	});
-
 	async function logout() {
-		await supabase.auth.signOut();
+		await fetch('/api/auth/logout', { method: 'POST' });
 		goto('/auth');
 	}
 </script>
@@ -111,7 +100,7 @@
 								{/if}
 							</div>
 							<span class="text-gray-700 font-medium">
-								{user.display_name ?? user.username ?? user.email ?? '未命名用户'}
+								{user.displayName ?? user.username ?? user.email ?? '未命名用户'}
 							</span>
 							<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>

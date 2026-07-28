@@ -180,7 +180,7 @@ function showUpdatePrompt(newVars, updatedVars, comments) {
 	log('1. 检查新增的配置项，根据注释说明进行配置', 'blue');
 	log('2. 更新需要修改的配置项（如 API 密钥、数据库连接等）', 'blue');
 	log('3. 确保 SESSION_SECRET 是随机生成的 32+ 字符字符串', 'blue');
-	log('4. 配置正确的数据库连接信息（如果使用 Supabase）', 'blue');
+	log('4. 配置正确的后端 Provider 信息（Supabase/Postgres 或 PocketBase）', 'blue');
 	
 	return true;
 }
@@ -213,7 +213,7 @@ async function main() {
 		logBold('\n⚠️  重要提醒：', 'yellow');
 		log('请检查并更新以下关键配置项：', 'yellow');
 		
-		const importantKeys = ['SESSION_SECRET', 'DATABASE_URL', 'AI_PROVIDER', 'DOUBAO_API_KEY'];
+		const importantKeys = ['SESSION_SECRET', 'BACKEND_PROVIDER', 'DATABASE_URL', 'POCKETBASE_URL', 'AI_PROVIDER', 'DOUBAO_API_KEY'];
 		importantKeys.forEach(key => {
 			const currentVars = parseEnvFile(envPath);
 			if (currentVars[key] && currentVars[key].includes('your_')) {
@@ -223,13 +223,16 @@ async function main() {
 		
 		logBold('\n📖 配置说明：', 'blue');
 		log('- SESSION_SECRET: 生成随机字符串，至少32字符', 'blue');
-		log('- DATABASE_URL: Supabase使用连接字符串', 'blue');
+		log('- BACKEND_PROVIDER: postgres 或 pocketbase', 'blue');
+		log('- DATABASE_URL: Supabase/Postgres 使用连接字符串', 'blue');
+		log('- POCKETBASE_URL: PocketBase 服务地址，例如 http://127.0.0.1:8090', 'blue');
 		log('- AI_PROVIDER: 选择 AI 提供商并配置对应的 API 密钥', 'blue');
 		log('- DOUBAO_API_KEY: 豆包 API 密钥（默认提供商）', 'blue');
 		
 		logBold('\n🔗 相关文档：', 'cyan');
 		log('- 环境变量说明: env.example', 'cyan');
 		log('- Supabase 设置: SUPABASE_SETUP.md', 'cyan');
+		log('- PocketBase: pocketbase serve --migrationsDir=./pb_migrations', 'cyan');
 		log('- 数据库迁移: DATABASE_MIGRATION_SUMMARY.md', 'cyan');
 	} else {
 		logBold('\n🚀 环境配置检查完成，可以继续运行应用！', 'green');

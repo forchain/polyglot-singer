@@ -1,7 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  let history = [];
-  let grouped = {};
+  type HistoryItem = {
+    id: string;
+    title?: string | null;
+    artist?: string | null;
+    createdAt?: string | null;
+    isPublic?: boolean | null;
+  };
+
+  let history: HistoryItem[] = [];
+  let grouped: Record<string, HistoryItem[]> = {};
   let loading = true;
   let error = '';
 

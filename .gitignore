@@ -7,3 +7,6 @@ package-lock.json
 .idea
 .vercel
 
+# Docker / local runtime artifacts
+build/
+pb_data/

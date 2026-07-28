@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { supabase } from '$lib/supabaseClient';
-  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   let email = 'outliertony@gmail.com';
   let password = '999999999';
@@ -11,27 +9,24 @@
   async function submit() {
     error = '';
     message = '';
-    console.log('登录请求:', email, password);
+    const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      error = result.error || '认证失败';
+      return;
+    }
+
     if (mode === 'register') {
-      const { error: err } = await supabase.auth.signUp({ email, password });
-      if (err) error = err.message;
-      else message = '注册成功，请查收邮箱激活！';
+      message = result.message || '注册成功';
     } else {
-      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-      console.log('登录响应:', data, err);
-      if (err) error = err.message;
-      else {
-        message = '登录成功';
-        if (data && data.session) {
-          console.log('access_token:', data.session.access_token);
-          console.log('refresh_token:', data.session.refresh_token);
-          // 生产环境需要 secure; SameSite=None
-          document.cookie = `sb-access-token=${data.session.access_token}; path=/; secure; SameSite=None`;
-          document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; secure; SameSite=None`;
-          console.log('当前 document.cookie:', document.cookie);
-        }
-        setTimeout(() => window.location.href = '/library', 500);
-      }
+      message = '登录成功';
+      setTimeout(() => window.location.href = '/library', 500);
     }
   }
 

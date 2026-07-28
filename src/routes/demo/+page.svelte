@@ -377,7 +377,15 @@
 
 	$: currentAnalysis = demos[currentDemo as keyof typeof demos];
 
-	let gallery = [];
+	type GalleryItem = {
+		id: string;
+		title?: string | null;
+		artist?: string | null;
+		createdAt?: string | null;
+		lyrics?: string;
+	};
+
+	let gallery: GalleryItem[] = [];
 	let loading = true;
 	let error = '';
 

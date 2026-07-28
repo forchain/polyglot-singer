@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { db, schema } from '$lib/server/database/connection';
-import { eq } from 'drizzle-orm';
+import { getBackendRepositories } from '$lib/server/backend';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -8,11 +7,11 @@ export const GET: RequestHandler = async ({ locals }) => {
   if (!user) {
     return json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
-  const pref = await db.select().from(schema.userPreferences).where(eq(schema.userPreferences.userId, user.id)).limit(1);
-  if (!pref[0]) {
+  const pref = await (await getBackendRepositories()).preferences.get(user.id);
+  if (!pref) {
     return json({ success: true, preferences: {} });
   }
-  return json({ success: true, preferences: pref[0] });
+  return json({ success: true, preferences: pref });
 };
 
 export const POST: RequestHandler = async ({ locals, request }) => {
@@ -21,11 +20,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     return json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
   const { defaultVoices } = await request.json();
-  const pref = await db.select().from(schema.userPreferences).where(eq(schema.userPreferences.userId, user.id)).limit(1);
-  if (pref[0]) {
-    await db.update(schema.userPreferences).set({ defaultVoices }).where(eq(schema.userPreferences.userId, user.id));
-  } else {
-    await db.insert(schema.userPreferences).values({ userId: user.id, defaultVoices });
-  }
+  await (await getBackendRepositories()).preferences.upsert(user.id, { defaultVoices });
   return json({ success: true });
-}; 
+};

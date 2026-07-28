@@ -30,7 +30,7 @@ npm run start:shell
 
 | 命令 | 描述 | 功能 |
 |------|------|------|
-| `./start.sh` | Shell 启动脚本 | 检查环境 → 设置数据库 → 启动应用 |
+| `./start.sh` | Shell 启动脚本 | 检查环境 → 按 provider 检查后端 → 启动应用 |
 | `npm run start` | Node.js 启动脚本 | 同 shell 脚本，但使用 Node.js |
 | `npm run start:shell` | 调用 shell 脚本 | 通过 npm 调用 shell 脚本 |
 
@@ -90,16 +90,17 @@ npm run start:shell
 **功能：**
 - 自动检查环境配置
 - 验证必要文件存在
-- 检查并设置数据库
+- 检查并设置 Supabase/Postgres 数据库，或提示 PocketBase 启动方式
 - 安装缺失的依赖
 - 启动开发服务器
 
 **执行流程：**
 1. 运行环境配置检查
 2. 验证 `.env` 文件存在
-3. 检查数据库文件，不存在则设置
-4. 检查 `node_modules`，不存在则安装依赖
-5. 启动开发服务器
+3. `BACKEND_PROVIDER=postgres` 时检查数据库设置
+4. `BACKEND_PROVIDER=pocketbase` 时跳过 Drizzle 设置，并提示运行 `pocketbase serve --migrationsDir=./pb_migrations`
+5. 检查 `node_modules`，不存在则安装依赖
+6. 启动开发服务器
 
 **错误处理：**
 - 提供详细的错误信息

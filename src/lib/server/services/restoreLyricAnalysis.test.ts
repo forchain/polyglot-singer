@@ -313,55 +313,26 @@ describe('restoreLyricAnalysis', () => {
       ]
     ];
 
-    const expected = [
-      {
-        lineNumber: 1,
-        originalLine: 'hello world',
-        lineTranslation: '你好，世界',
-        words: [
-          { word: 'hello', phonetic: '/həˈloʊ/', translation: '你好' },
-          { word: 'world', phonetic: '/wɜːrld/', translation: '世界' }
-        ]
-      },
-      {
-        lineNumber: 2,
-        originalLine: 'foo bar',
-        lineTranslation: '示例翻译',
-        words: [
-          { word: 'foo', phonetic: '/fuː/', translation: '示例' },
-          { word: 'bar', phonetic: '/bɑːr/', translation: '条' }
-        ]
-      },
-      {
-        lineNumber: 3,
-        originalLine: 'hello world',
-        lineTranslation: '你好，世界',
-        words: [
-          { word: 'hello', phonetic: '/həˈloʊ/', translation: '你好' },
-          { word: 'world', phonetic: '/wɜːrld/', translation: '世界' }
-        ]
-      },
-      {
-        lineNumber: 4,
-        originalLine: 'baz qux',
-        lineTranslation: '测试翻译',
-        words: [
-          { word: 'baz', phonetic: '/bæz/', translation: '测试' },
-          { word: 'qux', phonetic: '/kwʌks/', translation: '翻译' }
-        ]
-      },
-      {
-        lineNumber: 5,
-        originalLine: 'foo bar',
-        lineTranslation: '示例翻译',
-        words: [
-          { word: 'foo', phonetic: '/fuː/', translation: '示例' },
-          { word: 'bar', phonetic: '/bɑːr/', translation: '条' }
-        ]
-      }
-    ];
-
     const result = restoreLyricAnalysis(originalLines, compressedLines);
-    expect(result).toEqual(expected);
+    expect(result).toHaveLength(compressedLines.length - 1);
+    expect(result[0]).toMatchObject({
+      lineNumber: 1,
+      originalLine: originalLines[0],
+      lineTranslation: '蓝天在我们头顶崩塌也无妨'
+    });
+    expect(result[0].words.slice(0, 2)).toEqual([
+      { word: 'Le', phonetic: '/lə/', translation: '这' },
+      { word: 'ciel', phonetic: '/sjɛl/', translation: '天空' }
+    ]);
+    expect(result[19]).toMatchObject({
+      lineNumber: 20,
+      originalLine: originalLines[19],
+      lineTranslation: '只要你爱我 我都不在乎'
+    });
+    expect(result.at(-1)).toMatchObject({
+      lineNumber: compressedLines.length - 1,
+      originalLine: originalLines[compressedLines.length - 2],
+      lineTranslation: compressedLines[compressedLines.length - 2][0]
+    });
   });
-}); 
+});

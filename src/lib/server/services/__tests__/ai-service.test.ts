@@ -7,50 +7,30 @@ vi.mock('openai', () => ({
 	default: vi.fn().mockImplementation(() => ({
 		chat: {
 			completions: {
-				create: vi.fn()
-					.mockResolvedValueOnce({
+				create: vi.fn().mockImplementation(async ({ messages }) => {
+					const systemMessage = messages?.[0]?.content || '';
+					if (systemMessage.includes('Detect the language')) {
+						return { choices: [{ message: { content: 'en' } }] };
+					}
+
+					return {
 						choices: [{
 							message: {
 								content: JSON.stringify({
 									overallTranslation: "你好世界",
-									summary: "这是一首关于问候的歌曲"
+									summary: "这是一首关于问候的歌曲",
+									lines: [[
+										"你好世界",
+										[
+											["Hello", "/həˈloʊ/", "你好"],
+											["world", "/wɜːrld/", "世界"]
+										]
+									]]
 								})
 							}
 						}]
-					})
-					.mockResolvedValueOnce({
-						choices: [{
-							message: {
-								content: JSON.stringify({
-									lines: [{
-										originalLine: "Hello world",
-										lineNumber: 1,
-										lineTranslation: "你好世界",
-										words: [{
-											word: "Hello",
-											phonetic: "/həˈloʊ/",
-											translation: "你好",
-											context: "greeting",
-											position: { line: 1, index: 0 }
-										}, {
-											word: "world",
-											phonetic: "/wɜːrld/",
-											translation: "世界",
-											context: "noun",
-											position: { line: 1, index: 1 }
-										}]
-									}]
-								})
-							}
-						}]
-					})
-					.mockResolvedValueOnce({
-						choices: [{
-							message: {
-								content: "en"
-							}
-						}]
-					})
+					};
+				})
 			}
 		}
 	}))

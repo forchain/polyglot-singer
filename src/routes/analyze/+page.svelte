@@ -168,7 +168,7 @@
 		console.log('【voice debug】$reactive设置selectedVoice', selectedVoice, analysis.sourceLanguage, defaultVoices);
 	}
 
-	async function waitForAnalysis(id, maxTries = 10, delay = 300) {
+	async function waitForAnalysis(id: string, maxTries = 10, delay = 300) {
 		for (let i = 0; i < maxTries; i++) {
 			const res = await fetch(`/api/analyze/history/${id}`);
 			const data = await res.json();
