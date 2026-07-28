@@ -25,6 +25,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return json({ success: true, user: result.user }, { headers: { 'set-cookie': result.cookie || '' } });
 	}
 
+	if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+		return json({ success: false, error: 'Supabase is not configured' }, { status: 503 });
+	}
+
 	const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
 	const { data, error } = await supabase.auth.signUp({ email, password });
 	if (error) {

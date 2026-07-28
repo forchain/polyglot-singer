@@ -20,7 +20,7 @@ Edit `.env` with the values for your backend and AI provider. At minimum, set:
 - `BACKEND_PROVIDER` to `postgres` or `pocketbase`
 - `DATABASE_TYPE=postgres` and `DATABASE_URL=...` for the default Postgres path
 - `SESSION_SECRET`
-- one AI provider key, such as `DOUBAO_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`
+- `MINIMAX_API_KEY` (a MiniMax Token Plan key) when using the default provider
 
 Then initialize the database and start the app:
 
@@ -74,10 +74,10 @@ Build and run both the SvelteKit app and PocketBase together:
 
 ```bash
 cp env.example .env
-# Edit .env and add at least SESSION_SECRET, KIMI_API_KEY or MINIMAX_API_KEY, and AI_PROVIDER
+# Edit .env and add at least SESSION_SECRET and MINIMAX_API_KEY
 
 npm install
-docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
 ```
 
 This will:
@@ -85,6 +85,8 @@ This will:
 1. Build the SvelteKit production image with `@sveltejs/adapter-node`.
 2. Start PocketBase with `pb_migrations` applied automatically.
 3. Start the app on http://localhost:5173 with PocketBase available at http://localhost:8090.
+
+For Coolify, deploy `docker-compose.yml` as a Compose resource on the remote server and assign `https://sing.spike.network` to the `app` service. Coolify's Traefik proxy routes the domain to port 3000 and manages HTTPS.
 
 If PocketBase is being initialized for the first time, create a superuser with:
 

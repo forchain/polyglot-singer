@@ -1,0 +1,61 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Type check
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test -- --run
+
+      - name: Production build
+        run: npm run build
+
+      - name: Validate Compose file
+        run: docker compose -f docker-compose.yml config
+
+  deploy:
+    name: Deploy to Coolify
+    needs: verify
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger remote Coolify deployment
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+          COOLIFY_RESOURCE_UUID: ${{ secrets.COOLIFY_RESOURCE_UUID }}
+        run: |
+          set -eu
+          test -n "$COOLIFY_URL"
+          test -n "$COOLIFY_API_TOKEN"
+          test -n "$COOLIFY_RESOURCE_UUID"
+          curl --fail-with-body --silent --show-error \
+            --get "$COOLIFY_URL/api/v1/deploy" \
+            --header "Authorization: Bearer $COOLIFY_API_TOKEN" \
+            --data-urlencode "uuid=$COOLIFY_RESOURCE_UUID"
