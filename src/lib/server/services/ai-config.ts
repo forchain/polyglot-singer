@@ -16,11 +16,11 @@ export interface AIConfig {
 
 // Default configuration
 export const defaultConfig: AIConfig = {
-	provider: 'kimi',
-	key: privateEnv.KIMI_API_KEY || '',
-	baseURL: 'https://api.kimi.com/coding/v1',
-	model: privateEnv.KIMI_MODEL || 'kimi-for-coding',
-	detectionModel: privateEnv.KIMI_MODEL_DETECTION || 'kimi-for-coding',
+	provider: 'minimax',
+	key: privateEnv.MINIMAX_API_KEY || '',
+	baseURL: 'https://api.minimaxi.com/v1',
+	model: privateEnv.MINIMAX_MODEL || 'MiniMax-M2.7',
+	detectionModel: privateEnv.MINIMAX_MODEL_DETECTION || 'MiniMax-M2.7',
 	timeout: 300000,
 	maxTokens: 4000,
 	temperature: 0.3
@@ -72,13 +72,19 @@ export const providerConfigs: Record<string, Partial<AIConfig>> = {
 		baseURL: 'https://api.kimi.com/coding/v1',
 		model: 'kimi-for-coding',
 		detectionModel: 'kimi-for-coding'
+	},
+	minimax: {
+		provider: 'minimax',
+		baseURL: 'https://api.minimaxi.com/v1',
+		model: 'MiniMax-M2.7',
+		detectionModel: 'MiniMax-M2.7'
 	}
 };
 
 // Get configuration for a specific provider
 export function getAIConfig(provider?: string): AIConfig {
-	const providerName = provider || privateEnv.AI_PROVIDER || 'kimi';
-	const baseConfig = providerConfigs[providerName] || providerConfigs.kimi;
+	const providerName = provider || privateEnv.AI_PROVIDER || 'minimax';
+	const baseConfig = providerConfigs[providerName] || providerConfigs.minimax;
 
 	if (providerName === 'doubao') {
 		return {
@@ -131,6 +137,15 @@ export function getAIConfig(provider?: string): AIConfig {
 			baseURL: 'https://api.kimi.com/coding/v1',
 			model: privateEnv.KIMI_MODEL || baseConfig.model || defaultConfig.model,
 			detectionModel: privateEnv.KIMI_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
+		};
+	} else if (providerName === 'minimax') {
+		return {
+			...defaultConfig,
+			...baseConfig,
+			key: privateEnv.MINIMAX_API_KEY || '',
+			baseURL: 'https://api.minimaxi.com/v1',
+			model: privateEnv.MINIMAX_MODEL || baseConfig.model || defaultConfig.model,
+			detectionModel: privateEnv.MINIMAX_MODEL_DETECTION || baseConfig.detectionModel || defaultConfig.detectionModel
 		};
 	} else {
 		return {

@@ -80,6 +80,21 @@ describe('AI Service', () => {
 			expect(result.lines).toHaveLength(1);
 		});
 
+		it('should analyze lyrics with MiniMax Token Plan provider', async () => {
+			const result = await analyzeToLyrics(
+				'Hello world',
+				'en',
+				'zh',
+				'Test Song',
+				'Test Artist',
+				'minimax'
+			);
+
+			expect(result).toBeDefined();
+			expect(result.metadata?.model).toContain('minimax:');
+			expect(result.summary).toBeDefined();
+		});
+
 		it('should analyze lyrics with Claude provider', async () => {
 			const result = await analyzeToLyrics(
 				'Hello world',
@@ -136,10 +151,10 @@ describe('AI Service', () => {
 });
 
 describe('AI Config', () => {
-	it('should get Doubao config by default', () => {
+	it('should get MiniMax config by default', () => {
 		const config = getAIConfig();
-		expect(config.provider).toBe('doubao');
-		expect(config.baseURL).toBe('https://ark.cn-beijing.volces.com/api/v3');
+		expect(config.provider).toBe('minimax');
+		expect(config.baseURL).toBe('https://api.minimaxi.com/v1');
 	});
 
 	it('should get Doubao config explicitly', () => {
@@ -177,4 +192,11 @@ describe('AI Config', () => {
 		expect(config.provider).toBe('local');
 		expect(config.baseURL).toBe('http://localhost:11434/v1');
 	});
-}); 
+
+	it('should get MiniMax Token Plan config', () => {
+		const config = getAIConfig('minimax');
+		expect(config.provider).toBe('minimax');
+		expect(config.baseURL).toBe('https://api.minimaxi.com/v1');
+		expect(config.model).toBe('MiniMax-M2.7');
+	});
+});

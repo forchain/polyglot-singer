@@ -2,7 +2,7 @@
 	import { supportedProviders, providerDisplayNames } from '$lib/types/ai-providers.js';
 	import type { AIProvider } from '$lib/types/ai-providers.js';
 	
-	export let selectedProvider: AIProvider = 'doubao';
+	export let selectedProvider: AIProvider = 'minimax';
 	export let disabled = false;
 	
 	function handleProviderChange(event: Event) {
@@ -34,4 +34,4 @@
 			ℹ️ <strong>Custom Provider:</strong> Configure your custom AI provider in the environment variables.
 		</div>
 	{/if}
-</div> 
+</div>

@@ -1,5 +1,5 @@
 // Client-side AI provider types and configurations
-export type AIProvider = 'doubao' | 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom' | 'kimi';
+export type AIProvider = 'doubao' | 'deepseek' | 'openai' | 'anthropic' | 'google' | 'local' | 'custom' | 'kimi' | 'minimax';
 
 export const providerDisplayNames: Record<AIProvider, string> = {
 	doubao: 'Doubao (豆包)',
@@ -9,10 +9,11 @@ export const providerDisplayNames: Record<AIProvider, string> = {
 	google: 'Google (Gemini)',
 	local: 'Local (Ollama)',
 	custom: 'Custom Provider',
-	kimi: 'Kimi (Moonshot)'
+	kimi: 'Kimi (Moonshot)',
+	minimax: 'MiniMax Token Plan'
 };
 
-export const supportedProviders: AIProvider[] = ['doubao', 'deepseek', 'openai', 'anthropic', 'google', 'local', 'custom', 'kimi'];
+export const supportedProviders: AIProvider[] = ['doubao', 'deepseek', 'openai', 'anthropic', 'google', 'local', 'custom', 'kimi', 'minimax'];
 
 export interface ProviderInfo {
 	name: string;
@@ -67,5 +68,11 @@ export const providerInfo: Record<AIProvider, ProviderInfo> = {
 		description: 'Kimi models from Moonshot AI (Anthropic Messages compatible)',
 		requiresApiKey: true,
 		configUrl: 'https://platform.moonshot.cn/console/api-keys'
+	},
+	minimax: {
+		name: 'MiniMax Token Plan',
+		description: 'MiniMax M2 models using a Token Plan key',
+		requiresApiKey: true,
+		configUrl: 'https://platform.minimaxi.com/'
 	}
-}; 
+};
