@@ -4,9 +4,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies from the locked dependency graph. The cache keeps repeat
+# builds on Coolify from downloading the full npm cache again.
 COPY package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 # Copy source and build
 COPY . .
@@ -22,7 +23,7 @@ COPY --from=builder /app/build ./
 COPY --from=builder /app/package*.json ./
 
 # Install production dependencies only
-RUN npm install --omit=dev
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --no-audit --no-fund
 
 ENV PORT=3000
 ENV NODE_ENV=production
