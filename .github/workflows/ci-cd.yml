@@ -36,7 +36,7 @@ jobs:
         run: npm run build
 
       - name: Validate Compose file
-        run: docker compose -f docker-compose.yml config
+        run: docker compose -f docker-compose.yaml config
 
   deploy:
     name: Deploy to Coolify
